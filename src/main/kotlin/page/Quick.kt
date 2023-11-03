@@ -32,7 +32,7 @@ fun QuickPage(device: String) {
 
 
     if (dialogContent.isNotEmpty()) {
-        MessageDialog(dialogTitle, dialogContent) {
+        MessageDialog2(dialogTitle, dialogContent) {
             dialogTitle = ""
             dialogContent = ""
         }
@@ -165,34 +165,12 @@ private fun AboutSystem(device: String, onClick: (title: String, content: String
 @Composable
 private fun AboutApp(device: String, onClick: (title: String, content: String) -> Unit) {
     BaseQuick("应用相关", color = Color(0, 188, 212)) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe740, "卸载应用", modifier = Modifier.weight(1f))
-            QuickItem(0xe6af, "启动应用", modifier = Modifier.weight(1f))
-            QuickItem(0xe875, "停止运行", modifier = Modifier.weight(1f))
-            QuickItem(0xe7d6, "重启应用", modifier = Modifier.weight(1f))
-        }
+        Spacer(modifier = Modifier.height(14.dp))
         Spacer(modifier = Modifier.height(14.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe613, "清除数据", modifier = Modifier.weight(1f))
-            QuickItem(0xe633, "清除数据并重启应用", modifier = Modifier.weight(1f))
-            QuickItem(0xe647, "重置权限", modifier = Modifier.weight(1f))
-            QuickItem(0xe628, "重置权限并重启应用", modifier = Modifier.weight(1f))
-        }
-        Spacer(modifier = Modifier.height(14.dp))
-        Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe66c, "授权所有权限", modifier = Modifier.weight(1f))
-            QuickItem(0xe76d, "查看应用安装路径", modifier = Modifier.weight(1f).clickable {
-                val result = AdbTool.parseResult("adb -s $device shell dumpsys activity activities | grep mResumedActivity".runExec())
-                if (result.isEmpty()){
-                    onClick.invoke("查看应用安装路径", "无法获取")
-                    return@clickable
-                }
-                val currentPackage = result.getOrNull(0)?.getOrNull(3)?.split("/")?.firstOrNull()
-                val path = "adb -s $device shell pm path $currentPackage".runExec().split(":").getOrNull(1)
-                onClick.invoke("查看应用安装路径", "$path")
-            })
             QuickItem(0xe60e, "保存Apk到电脑", modifier = Modifier.weight(1f))
-            // 补全一个
+            QuickItem(modifier = Modifier.weight(1f))
+            QuickItem(modifier = Modifier.weight(1f))
             QuickItem(modifier = Modifier.weight(1f))
         }
     }
@@ -208,13 +186,7 @@ private fun CommonFunction(device: String, onClick: (title: String, content: Str
             QuickItem(0xe693, "安装应用", modifier = Modifier.weight(1f))
             QuickItem(0xe816, "输入文本", modifier = Modifier.weight(1f))
             QuickItem(0xe931, "截图保存到电脑", modifier = Modifier.weight(1f))
-            QuickItem(0xe607, "查看当前Activity", modifier = Modifier.weight(1f).clickable {
-                val result = AdbTool.parseResult("adb -s $device shell dumpsys window | grep mCurrentFocus".runExec())
-                val windows = result.joinToString("\n") {
-                    (it.lastOrNull() ?: "").replace("}","")
-                }
-                onClick.invoke("查看当前Activity", windows)
-            })
+            QuickItem(modifier = Modifier.weight(1f))
         }
     }
 }
@@ -270,7 +242,7 @@ private fun QuickItem(ttf: Int? = null, title: String? = null, modifier: Modifie
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-private fun MessageDialog(title: String, content: String, clickDismiss: () -> Unit) {
+private fun MessageDialog2(title: String, content: String, clickDismiss: () -> Unit) {
     AlertDialog(modifier = Modifier.width(300.dp),
         onDismissRequest = {
             clickDismiss.invoke()
