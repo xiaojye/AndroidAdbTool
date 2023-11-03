@@ -49,9 +49,15 @@ fun QuickPage(device: String) {
                 dialogContent = content
             }
             Spacer(modifier = Modifier.height(16.dp))
-            AboutApp()
+            AboutApp(device) { title, content ->
+                dialogTitle = title
+                dialogContent = content
+            }
             Spacer(modifier = Modifier.height(16.dp))
-            AboutSystem()
+            AboutSystem(device) { title, content ->
+                dialogTitle = title
+                dialogContent = content
+            }
             Spacer(modifier = Modifier.height(16.dp))
             AboutKeyBoard(device)
             Spacer(modifier = Modifier.height(16.dp))
@@ -124,18 +130,29 @@ private fun AboutKeyBoard(deviceId: String) {
  * 系统相关
  */
 @Composable
-private fun AboutSystem() {
+private fun AboutSystem(device: String, onClick: (title: String, content: String) -> Unit) {
     BaseQuick("系统相关", color = Color(255, 193, 7)) {
         Row(modifier = Modifier.fillMaxWidth()) {
             QuickItem(0xe695, "开始录屏", modifier = Modifier.weight(1f))
             QuickItem(0xe71d, "结束录屏保存到电脑", modifier = Modifier.weight(1f))
-            QuickItem(0xe881, "查看AndroidId", modifier = Modifier.weight(1f))
+            QuickItem(0xe881, "查看AndroidId", modifier = Modifier.weight(1f).clickable {
+                onClick.invoke("查看AndroidId", "adb -s $device shell settings get secure android_id".runExec())
+            })
             QuickItem(0xe617, "查看系统版本", modifier = Modifier.weight(1f))
         }
         Spacer(modifier = Modifier.height(14.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe632, "查看IP地址", modifier = Modifier.weight(1f))
-            QuickItem(0xe65d, "查看Mac地址", modifier = Modifier.weight(1f))
+            QuickItem(0xe632, "查看IP地址", modifier = Modifier.weight(1f).clickable {
+                val result = AdbTool.parseResult("adb -s $device shell ip addr show wlan0 | grep 'inet' | cut -d '/' -f 1".runExec())
+                val ipv4 = result.getOrNull(0)?.lastOrNull()
+                val ipv6 = result.getOrNull(1)?.lastOrNull()
+                onClick.invoke("查看IP地址", "$ipv4\n$ipv6")
+            })
+            QuickItem(0xe65d, "查看Mac地址", modifier = Modifier.weight(1f).clickable {
+                val result = AdbTool.parseResult("adb -s $device shell ip addr show wlan0 | grep 'link/ether'".runExec())
+                val ipv4 = result.getOrNull(0)?.getOrNull(1)
+                onClick.invoke("查看Mac地址", "$ipv4")
+            })
             QuickItem(0xe6b2, "重启手机", modifier = Modifier.weight(1f))
             QuickItem(0xe61e, "查看系统属性", modifier = Modifier.weight(1f))
         }
@@ -146,7 +163,7 @@ private fun AboutSystem() {
  * 应用相关
  */
 @Composable
-private fun AboutApp() {
+private fun AboutApp(device: String, onClick: (title: String, content: String) -> Unit) {
     BaseQuick("应用相关", color = Color(0, 188, 212)) {
         Row(modifier = Modifier.fillMaxWidth()) {
             QuickItem(0xe740, "卸载应用", modifier = Modifier.weight(1f))
@@ -164,7 +181,16 @@ private fun AboutApp() {
         Spacer(modifier = Modifier.height(14.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
             QuickItem(0xe66c, "授权所有权限", modifier = Modifier.weight(1f))
-            QuickItem(0xe76d, "查看应用安装路径", modifier = Modifier.weight(1f))
+            QuickItem(0xe76d, "查看应用安装路径", modifier = Modifier.weight(1f).clickable {
+                val result = AdbTool.parseResult("adb -s $device shell dumpsys activity activities | grep mResumedActivity".runExec())
+                if (result.isEmpty()){
+                    onClick.invoke("查看应用安装路径", "无法获取")
+                    return@clickable
+                }
+                val currentPackage = result.getOrNull(0)?.getOrNull(3)?.split("/")?.firstOrNull()
+                val path = "adb -s $device shell pm path $currentPackage".runExec().split(":").getOrNull(1)
+                onClick.invoke("查看应用安装路径", "$path")
+            })
             QuickItem(0xe60e, "保存Apk到电脑", modifier = Modifier.weight(1f))
             // 补全一个
             QuickItem(modifier = Modifier.weight(1f))
@@ -183,7 +209,11 @@ private fun CommonFunction(device: String, onClick: (title: String, content: Str
             QuickItem(0xe816, "输入文本", modifier = Modifier.weight(1f))
             QuickItem(0xe931, "截图保存到电脑", modifier = Modifier.weight(1f))
             QuickItem(0xe607, "查看当前Activity", modifier = Modifier.weight(1f).clickable {
-                onClick.invoke("查看当前Activity", "adb -s $device shell dumpsys window | grep mCurrentFocus".runExec())
+                val result = AdbTool.parseResult("adb -s $device shell dumpsys window | grep mCurrentFocus".runExec())
+                val windows = result.joinToString("\n") {
+                    (it.lastOrNull() ?: "").replace("}","")
+                }
+                onClick.invoke("查看当前Activity", windows)
             })
         }
     }
@@ -241,24 +271,25 @@ private fun QuickItem(ttf: Int? = null, title: String? = null, modifier: Modifie
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun MessageDialog(title: String, content: String, clickDismiss: () -> Unit) {
-    AlertDialog(onDismissRequest = {
-        clickDismiss.invoke()
-    }, buttons = {
-        Row(
-            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End
-        ) {
-            TextButton(
-                onClick = clickDismiss,
+    AlertDialog(modifier = Modifier.width(300.dp),
+        onDismissRequest = {
+            clickDismiss.invoke()
+        }, buttons = {
+            Row(
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End
             ) {
-                Text("确定")
+                TextButton(
+                    onClick = clickDismiss,
+                ) {
+                    Text("确定")
+                }
             }
-        }
-    }, title = {
-        Text(title)
-    }, text = {
-        // text默认不支持复制黏贴 需要用SelectionContainer包裹
-        SelectionContainer {
-            Text(content)
-        }
-    })
+        }, title = {
+            Text(title)
+        }, text = {
+            // text默认不支持复制黏贴 需要用SelectionContainer包裹
+            SelectionContainer {
+                Text(content)
+            }
+        })
 }

@@ -128,4 +128,28 @@ object AdbTool {
         "logcat",
         "*:$level"
     )
+
+    fun parseResult(result:String?): Array<Array<String>> {
+        result ?: return emptyArray()
+
+        val data = arrayListOf<Array<String>>()
+
+        val lines = result.replace("\r","\n").split("\n")
+        lines.forEach {
+            val line = parseLine(it)
+            if(line.isNotEmpty()) {
+                data.add(line)
+            }
+        }
+
+        return data.toTypedArray()
+    }
+
+    private fun parseLine(line:String?):Array<String>{
+        if(line.isNullOrBlank()){
+            return emptyArray()
+        }
+        val lines = line.replace("\t"," ").split(" ").filter { it.trim().isNotBlank() }
+        return lines.toTypedArray()
+    }
 }

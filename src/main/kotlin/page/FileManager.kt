@@ -23,13 +23,13 @@ import tool.runExecAndAdbToBuffer
 
 @Composable
 fun FileManager(deviceId: String) {
-
     var foldName by remember { mutableStateOf("/sdcard/") }
     val fileList = remember { mutableStateListOf<FileBean>() }
 
     // 获取本机文件及文件夹
-    LaunchedEffect(foldName) {
+    LaunchedEffect(foldName,deviceId) {
         withContext(Dispatchers.IO) {
+            fileList.clear()
             AdbTool.fileList(deviceId, foldName).runExecAndAdbToBuffer().use {
                 while (!it.readUtf8Line().isNullOrBlank()) {
                     val line = it.readUtf8Line() ?: continue
@@ -43,6 +43,7 @@ fun FileManager(deviceId: String) {
                         )
                     }
                 }
+                fileList.sortBy { !it.fold }
             }
         }
     }

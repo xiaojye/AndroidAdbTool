@@ -32,13 +32,22 @@ import kotlinx.coroutines.withContext
 import okio.buffer
 import okio.source
 import page.FileManager
-import page.Logcat
 import page.QuickPage
 import page.SettingPage
 import res.defaultBgColor
 import tool.AdbTool
 import tool.runExec
 
+fun main() = application {
+    Window(
+        onCloseRequest = ::exitApplication,
+        title = "tool.AdbTool",
+        visible = true,
+        state = WindowState(size = DpSize(width = 1200.dp, height = 900.dp))
+    ) {
+        App()
+    }
+}
 
 @Composable
 @Preview
@@ -63,24 +72,11 @@ fun App() {
             when (selectItem) {
                 0 -> QuickPage(device)
                 1 -> FileManager(device)
-                2 -> Logcat(device)
-                3 -> SettingPage(adbPath)
+                2 -> SettingPage(adbPath)
             }
         }
     }
 }
-
-fun main() = application {
-    Window(
-        onCloseRequest = ::exitApplication,
-        title = "tool.AdbTool",
-        visible = true,
-        state = WindowState(size = DpSize(width = 1200.dp, height = 900.dp))
-    ) {
-        App()
-    }
-}
-
 
 @Composable
 private fun MainNav(modifier: Modifier, onSelectItem: (Int) -> Unit, deviceId: (String?) -> Unit) {
@@ -98,6 +94,32 @@ private fun MainNav(modifier: Modifier, onSelectItem: (Int) -> Unit, deviceId: (
     }
 }
 
+/**
+ *
+ * 首页导航
+ * @param selectedPosition 当前选中的position
+ * @param mePosition 自己的position
+ */
+@Composable
+private fun MainNavItem(
+    selectedPosition: Int, mePosition: Int, svgPath: String, labelText: String, onClick: (Int) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable {
+            onClick.invoke(mePosition)
+        }.padding(12.dp), verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painterResource(svgPath), "", modifier = Modifier.width(24.dp).height(24.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            labelText, color = if (selectedPosition == mePosition) Color(
+                139, 195, 74
+            ) else Color.Gray
+        )
+    }
+}
 
 /**
  * 连接设备widget
@@ -208,38 +230,11 @@ fun ConnectDevices(deviceCallback: (String?) -> Unit) {
 
         Button(onClick = {
             devices.clear()
+            selectIndexDevice = 0
             refresh++
         }, modifier = Modifier.fillMaxWidth()) {
             Text("刷新Adb Device")
         }
     }
 
-}
-
-
-/**
- *
- * 首页导航
- * @param selectedPosition 当前选中的position
- * @param mePosition 自己的position
- */
-@Composable
-private fun MainNavItem(
-    selectedPosition: Int, mePosition: Int, svgPath: String, labelText: String, onClick: (Int) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth().clickable {
-            onClick.invoke(mePosition)
-        }.padding(12.dp), verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painterResource(svgPath), "", modifier = Modifier.width(24.dp).height(24.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            labelText, color = if (selectedPosition == mePosition) Color(
-                139, 195, 74
-            ) else Color.Gray
-        )
-    }
 }
