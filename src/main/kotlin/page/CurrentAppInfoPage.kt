@@ -1,20 +1,19 @@
 package page
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Button
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.unit.dp
 import dialog.MessageDialog
-import res.whiteColor
 import tool.ADBUtil
+import java.awt.FileDialog
 
 @Composable
-fun InfoPage(deviceId: String) {
+fun CurrentAppInfoPage(deviceId: String) {
     var refreshCount by remember { mutableStateOf(0) }
     var showUnInstallDialog by remember { mutableStateOf(false) }
     var showCleanDataDialog by remember { mutableStateOf(false) }
@@ -64,7 +63,28 @@ fun InfoPage(deviceId: String) {
                 Text("清空数据")
             }
             Button(onClick = {
-                             // TODO
+                val fileName = "${currentPackageName}.apk"
+                val fileDialog = FileDialog(ComposeWindow(),"导出安装包",FileDialog.SAVE)
+                fileDialog.isMultipleMode = false
+                fileDialog.isVisible = true
+                fileDialog.file = fileName
+                val directory = fileDialog.directory?.replace("\n","")?.replace("\r","")
+                var file = fileDialog.file?.replace("\n","")?.replace("\r","")
+                if(file.isNullOrBlank()){
+                    file = fileName
+                }
+                if (directory != null) {
+                    val path = "$directory$file"
+                    println(path)
+                    ADBUtil.exportFile(deviceId,currentApkPath,path)
+                }
+
+                // JFileChooser().apply {
+                //     fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+                //     showOpenDialog(ComposeWindow())
+                //     val path = selectedFile?.absolutePath ?: ""
+                //     println(path)
+                // }
             }, modifier = Modifier.padding(10.dp)) {
                 Text("导出安装包")
             }

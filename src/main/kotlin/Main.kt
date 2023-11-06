@@ -32,7 +32,7 @@ import kotlinx.coroutines.withContext
 import okio.buffer
 import okio.source
 import page.FileManager
-import page.InfoPage
+import page.CurrentAppInfoPage
 import page.QuickPage
 import page.SettingPage
 import res.defaultBgColor
@@ -71,7 +71,7 @@ fun App() {
             modifier = Modifier.background(defaultBgColor).fillMaxHeight().fillMaxWidth().padding(start = 200.dp)
         ) {
             when (selectItem) {
-                0 -> InfoPage(device)
+                0 -> CurrentAppInfoPage(device)
                 1 -> QuickPage(device)
                 2 -> FileManager(device)
                 3 -> SettingPage(adbPath)

@@ -15,7 +15,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dialog.InputDialog
+import dialog.MessageDialog
 import res.randomColor
+import tool.ADBUtil
 import tool.AdbTool
 import tool.runExec
 import tool.ttfFontFamily
@@ -44,15 +47,7 @@ fun QuickPage(device: String) {
         // 前后加个间距
         item {
             Spacer(modifier = Modifier.height(16.dp))
-            CommonFunction(device) { title, content ->
-                dialogTitle = title
-                dialogContent = content
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            AboutApp(device) { title, content ->
-                dialogTitle = title
-                dialogContent = content
-            }
+            CommonFunction(device)
             Spacer(modifier = Modifier.height(16.dp))
             AboutSystem(device) { title, content ->
                 dialogTitle = title
@@ -61,11 +56,7 @@ fun QuickPage(device: String) {
             Spacer(modifier = Modifier.height(16.dp))
             AboutKeyBoard(device)
             Spacer(modifier = Modifier.height(16.dp))
-            ScreenInput()
-            Spacer(modifier = Modifier.height(16.dp))
-
         }
-//
         item {
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -73,56 +64,32 @@ fun QuickPage(device: String) {
 }
 
 /**
- * 屏幕输入
+ * 常用功能
  */
 @Composable
-private fun ScreenInput() {
-    BaseQuick("屏幕输入", color = Color(146, 106, 255)) {
+private fun CommonFunction(device: String) {
+    var showInputTextDialog by remember { mutableStateOf(false) }
+
+    BaseQuick("常用功能", color = Color(255, 152, 0)) {
         Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe795, "向上滑动", modifier = Modifier.weight(1f))
-            QuickItem(0xe603, "向下滑动", modifier = Modifier.weight(1f))
-            QuickItem(0xe60a, "向左滑动", modifier = Modifier.weight(1f))
-            QuickItem(0xe6ca, "向右滑动", modifier = Modifier.weight(1f))
-        }
-        Spacer(modifier = Modifier.height(14.dp))
-        Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe697, "屏幕点击", modifier = Modifier.weight(1f))
-            QuickItem(modifier = Modifier.weight(1f))
-            QuickItem(modifier = Modifier.weight(1f))
+            QuickItem(0xe693, "安装应用", modifier = Modifier.weight(1f))
+            QuickItem(0xe816, "输入文本", modifier = Modifier.weight(1f).clickable {
+                showInputTextDialog = true
+            })
+            QuickItem(0xe931, "截图保存到电脑", modifier = Modifier.weight(1f))
             QuickItem(modifier = Modifier.weight(1f))
         }
     }
-}
 
-/**
- * 按键相关
- */
-@Composable
-private fun AboutKeyBoard(deviceId: String) {
-    BaseQuick("按键相关", color = Color(158, 176, 184)) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe68e, "Home键", modifier = Modifier.weight(1f).clickable { AdbTool.pressHome(deviceId) })
-            QuickItem(0xe616, "Back键", modifier = Modifier.weight(1f).clickable { AdbTool.pressBack(deviceId) })
-            QuickItem(0xe605, "Menu键", modifier = Modifier.weight(1f).clickable { AdbTool.pressMenu(deviceId) })
-            QuickItem(0xe615, "Power键", modifier = Modifier.weight(1f).clickable { AdbTool.pressPower(deviceId) })
-        }
-        Spacer(modifier = Modifier.height(14.dp))
-        Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe76e, "增加音量", modifier = Modifier.weight(1f).clickable { AdbTool.pressVolumeUp(deviceId) })
-            QuickItem(
-                0xe771,
-                "降低音量",
-                modifier = Modifier.weight(1f).clickable { AdbTool.pressVolumeDown(deviceId) })
-            QuickItem(0xe612, "静音", modifier = Modifier.weight(1f).clickable { AdbTool.pressVolumeMute(deviceId) })
-            QuickItem(0xe658, "切换应用", modifier = Modifier.weight(1f).clickable { AdbTool.pressSwitchApp(deviceId) })
-        }
-        Spacer(modifier = Modifier.height(14.dp))
-        Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe796, "遥控器", modifier = Modifier.weight(1f))
-            QuickItem(modifier = Modifier.weight(1f))
-            QuickItem(modifier = Modifier.weight(1f))
-            QuickItem(modifier = Modifier.weight(1f))
-        }
+    if(showInputTextDialog) {
+        InputDialog("请输入", "", {
+            showInputTextDialog = false
+        }, {
+            showInputTextDialog = false
+            it?.let {
+                ADBUtil.inputText(device,it)
+            }
+        })
     }
 }
 
@@ -160,32 +127,39 @@ private fun AboutSystem(device: String, onClick: (title: String, content: String
 }
 
 /**
- * 应用相关
+ * 按键相关
  */
 @Composable
-private fun AboutApp(device: String, onClick: (title: String, content: String) -> Unit) {
-    BaseQuick("应用相关", color = Color(0, 188, 212)) {
-        Spacer(modifier = Modifier.height(14.dp))
-        Spacer(modifier = Modifier.height(14.dp))
+private fun AboutKeyBoard(deviceId: String) {
+    BaseQuick("按键相关", color = Color(158, 176, 184)) {
         Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe60e, "保存Apk到电脑", modifier = Modifier.weight(1f))
-            QuickItem(modifier = Modifier.weight(1f))
-            QuickItem(modifier = Modifier.weight(1f))
-            QuickItem(modifier = Modifier.weight(1f))
+            QuickItem(0xe68e, "Home键", modifier = Modifier.weight(1f).clickable { AdbTool.pressHome(deviceId) })
+            QuickItem(0xe616, "Back键", modifier = Modifier.weight(1f).clickable { AdbTool.pressBack(deviceId) })
+            QuickItem(0xe605, "Menu键", modifier = Modifier.weight(1f).clickable { AdbTool.pressMenu(deviceId) })
+            QuickItem(0xe615, "Power键", modifier = Modifier.weight(1f).clickable { AdbTool.pressPower(deviceId) })
         }
-    }
-}
-
-/**
- * 常用功能
- */
-@Composable
-private fun CommonFunction(device: String, onClick: (title: String, content: String) -> Unit) {
-    BaseQuick("常用功能", color = Color(255, 152, 0)) {
+        Spacer(modifier = Modifier.height(14.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe693, "安装应用", modifier = Modifier.weight(1f))
-            QuickItem(0xe816, "输入文本", modifier = Modifier.weight(1f))
-            QuickItem(0xe931, "截图保存到电脑", modifier = Modifier.weight(1f))
+            QuickItem(0xe76e, "增加音量", modifier = Modifier.weight(1f).clickable { AdbTool.pressVolumeUp(deviceId) })
+            QuickItem(
+                0xe771,
+                "降低音量",
+                modifier = Modifier.weight(1f).clickable { AdbTool.pressVolumeDown(deviceId) })
+            QuickItem(0xe612, "静音", modifier = Modifier.weight(1f).clickable { AdbTool.pressVolumeMute(deviceId) })
+            QuickItem(0xe658, "切换应用", modifier = Modifier.weight(1f).clickable { AdbTool.pressSwitchApp(deviceId) })
+        }
+        Spacer(modifier = Modifier.height(14.dp))
+        Row(modifier = Modifier.fillMaxWidth()) {
+            QuickItem(0xe795, "向上滑动", modifier = Modifier.weight(1f))
+            QuickItem(0xe603, "向下滑动", modifier = Modifier.weight(1f))
+            QuickItem(0xe60a, "向左滑动", modifier = Modifier.weight(1f))
+            QuickItem(0xe6ca, "向右滑动", modifier = Modifier.weight(1f))
+        }
+        Spacer(modifier = Modifier.height(14.dp))
+        Row(modifier = Modifier.fillMaxWidth()) {
+            QuickItem(0xe697, "屏幕点击", modifier = Modifier.weight(1f))
+            QuickItem(modifier = Modifier.weight(1f))
+            QuickItem(modifier = Modifier.weight(1f))
             QuickItem(modifier = Modifier.weight(1f))
         }
     }

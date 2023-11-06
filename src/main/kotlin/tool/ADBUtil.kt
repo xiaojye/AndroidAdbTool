@@ -133,7 +133,7 @@ object ADBUtil {
      */
     fun getApkPath(deviceId: String, pk: String): String? {
         val command = arrayOf("-s", deviceId, "shell", "pm", "path", pk)
-        return CLUtil.execute(arrayOf(ADB_PATH, *command)).split(":").lastOrNull()
+        return CLUtil.execute(arrayOf(ADB_PATH, *command)).split(":").lastOrNull()?.replace("\n","")?.replace("\r","")
     }
 
     /**
@@ -172,6 +172,22 @@ object ADBUtil {
     fun cleanAppData(deviceId: String, pk: String) {
         stopApplication(deviceId, pk)
         val command = arrayOf("-s", deviceId, "shell","pm","clear", pk)
+        CLUtil.execute(arrayOf(ADB_PATH, *command))
+    }
+
+    /**
+     * 输入文本
+     */
+    fun inputText(deviceId: String, text: String){
+        val command = arrayOf("-s", deviceId, "shell","input","text", text)
+        CLUtil.execute(arrayOf(ADB_PATH, *command))
+    }
+
+    /**
+     * 导出文件
+     */
+    fun exportFile(deviceId: String,deviceFile: String, localFile: String) {
+        val command = arrayOf("-s", deviceId, "pull", deviceFile, localFile)
         CLUtil.execute(arrayOf(ADB_PATH, *command))
     }
 
