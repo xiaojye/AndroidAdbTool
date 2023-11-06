@@ -1,4 +1,4 @@
-package page
+package cn.erning.adbutil.page
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
@@ -15,11 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import bean.FileBean
+import cn.erning.adbutil.bean.FileBean
+import cn.erning.adbutil.tool.ADBUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import tool.AdbTool
-import tool.runExecAndAdbToBuffer
 
 @Composable
 fun FileManager(deviceId: String) {
@@ -29,20 +28,10 @@ fun FileManager(deviceId: String) {
     // 获取本机文件及文件夹
     LaunchedEffect(foldName,deviceId) {
         withContext(Dispatchers.IO) {
-            fileList.clear()
-            AdbTool.fileList(deviceId, foldName).runExecAndAdbToBuffer().use {
-                while (!it.readUtf8Line().isNullOrBlank()) {
-                    val line = it.readUtf8Line() ?: continue
-                    val hasFold = line.endsWith("/")
-                    withContext(Dispatchers.Main) {
-                        fileList.add(
-                            FileBean(
-                                if (hasFold) line.removeRange(line.length - 1, line.length) else line,
-                                hasFold
-                            )
-                        )
-                    }
-                }
+            val list = ADBUtil.fileList(deviceId,foldName)
+            withContext(Dispatchers.Main) {
+                fileList.clear()
+                fileList.addAll(list)
                 fileList.sortBy { !it.fold }
             }
         }

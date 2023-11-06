@@ -1,4 +1,5 @@
-// Copyright 2000-2021 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
+package cn.erning.adbutil
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -25,24 +26,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import bean.DeviceInfo
-import bean.createMainNavData
+import cn.erning.adbutil.bean.DeviceInfo
+import cn.erning.adbutil.bean.createMainNavData
+import cn.erning.adbutil.page.CurrentAppInfoPage
+import cn.erning.adbutil.page.FileManager
+import cn.erning.adbutil.page.QuickPage
+import cn.erning.adbutil.res.defaultBgColor
+import cn.erning.adbutil.tool.ADBUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okio.buffer
-import okio.source
-import page.FileManager
-import page.CurrentAppInfoPage
-import page.QuickPage
-import page.SettingPage
-import res.defaultBgColor
-import tool.AdbTool
-import tool.runExec
 
 fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
-        title = "tool.AdbTool",
+        title = "AndroidAdbTool",
         visible = true,
         state = WindowState(size = DpSize(width = 1200.dp, height = 900.dp))
     ) {
@@ -53,7 +50,6 @@ fun main() = application {
 @Composable
 @Preview
 fun App() {
-    val adbPath = AdbTool.adbPath()
     var selectItem by remember { mutableStateOf(0) }
     // 当前选中的设备id
     var device by remember { mutableStateOf("") }
@@ -74,7 +70,6 @@ fun App() {
                 0 -> CurrentAppInfoPage(device)
                 1 -> QuickPage(device)
                 2 -> FileManager(device)
-                3 -> SettingPage(adbPath)
             }
         }
     }
@@ -135,28 +130,9 @@ fun ConnectDevices(deviceCallback: (String?) -> Unit) {
     LaunchedEffect(refresh) {
 
         withContext(Dispatchers.IO) {
-            val p = Runtime.getRuntime().exec("adb devices")
-            p.inputStream.source().buffer().use {
-                while (true) {
-                    val line = it.readUtf8Line() ?: return@use
-
-                    if (line.contains("List of devices attached") || line.isBlank()) {
-                        continue
-                    }
-                    if (line.contains("device")) {
-                        val deviceLine = line.split("\t")
-                        if (deviceLine.isEmpty()) {
-                            continue
-                        }
-                        val device = deviceLine[0]
-                        val deviceName = "adb -s $device shell getprop ro.product.brand".runExec()
-                        val deviceModel = "adb -s $device shell getprop ro.product.model".runExec()
-
-                        withContext(Dispatchers.Main) {
-                            devices.add(DeviceInfo(deviceName, deviceModel, device))
-                        }
-                    }
-                }
+            val list = ADBUtil.getDevice()
+            withContext(Dispatchers.Main) {
+                devices.addAll(list)
             }
         }
 
@@ -180,7 +156,7 @@ fun ConnectDevices(deviceCallback: (String?) -> Unit) {
             val firstDevice = devices[selectIndexDevice]
             // 获取设备品牌
             deviceCallback.invoke(firstDevice.device)
-            "${firstDevice.deviceName}  ${firstDevice.deviceModel}"
+            "${firstDevice.deviceName}\n${firstDevice.deviceModel}"
         } else {
             deviceCallback.invoke(null)
             "连接设备"
@@ -216,7 +192,7 @@ fun ConnectDevices(deviceCallback: (String?) -> Unit) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            "${device.deviceName}  ${device.deviceModel}",
+                            "${device.deviceName}\n${device.deviceModel}",
                             color = if (deviceName.contains(device.deviceName) || deviceName.contains(device.deviceModel)) Color(
                                 139, 195, 74
                             ) else Color.Black

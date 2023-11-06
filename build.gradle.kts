@@ -7,7 +7,7 @@ plugins {
     id("org.jetbrains.compose") version "1.1.0"
 }
 
-group = "com.ohdu"
+group = "cn.erning.adbutil"
 version = "1.0"
 
 repositories {
@@ -27,11 +27,27 @@ tasks.withType<KotlinCompile> {
 
 compose.desktop {
     application {
-        mainClass = "MainKt"
+        mainClass = "cn.erning.adbutil.MainKt"
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Deb, TargetFormat.Exe)
             packageName = "AndroidAdbTool"
             packageVersion = "1.0.0"
         }
     }
+}
+
+tasks.withType<Jar> {
+    manifest {
+        attributes["Main-Class"] = "cn.erning.adbutil.MainKt"
+    }
+}
+
+tasks.register<Jar>("ubarJar") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set("ubar")
+    from(sourceSets.main.get().output)
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    })
 }

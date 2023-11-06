@@ -1,4 +1,4 @@
-package page
+package cn.erning.adbutil.page
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -15,13 +15,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dialog.InputDialog
-import dialog.MessageDialog
-import res.randomColor
-import tool.ADBUtil
-import tool.AdbTool
-import tool.runExec
-import tool.ttfFontFamily
+import cn.erning.adbutil.dialog.InputDialog
+import cn.erning.adbutil.res.randomColor
+import cn.erning.adbutil.tool.*
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -72,7 +68,9 @@ private fun CommonFunction(device: String) {
 
     BaseQuick("常用功能", color = Color(255, 152, 0)) {
         Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe693, "安装应用", modifier = Modifier.weight(1f))
+            QuickItem(0xe693, "安装应用", modifier = Modifier.weight(1f).clickable {
+                CLUtil.execute(arrayOf("java","-jar","/Users/erning/Program/Java/ApkInstaller_jar/ApkInstaller.jar"))
+            })
             QuickItem(0xe816, "输入文本", modifier = Modifier.weight(1f).clickable {
                 showInputTextDialog = true
             })
@@ -103,22 +101,18 @@ private fun AboutSystem(device: String, onClick: (title: String, content: String
             QuickItem(0xe695, "开始录屏", modifier = Modifier.weight(1f))
             QuickItem(0xe71d, "结束录屏保存到电脑", modifier = Modifier.weight(1f))
             QuickItem(0xe881, "查看AndroidId", modifier = Modifier.weight(1f).clickable {
-                onClick.invoke("查看AndroidId", "adb -s $device shell settings get secure android_id".runExec())
+                onClick.invoke("查看AndroidId", ADBUtil.getAndroidId(device))
             })
             QuickItem(0xe617, "查看系统版本", modifier = Modifier.weight(1f))
         }
         Spacer(modifier = Modifier.height(14.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
             QuickItem(0xe632, "查看IP地址", modifier = Modifier.weight(1f).clickable {
-                val result = AdbTool.parseResult("adb -s $device shell ip addr show wlan0 | grep 'inet' | cut -d '/' -f 1".runExec())
-                val ipv4 = result.getOrNull(0)?.lastOrNull()
-                val ipv6 = result.getOrNull(1)?.lastOrNull()
-                onClick.invoke("查看IP地址", "$ipv4\n$ipv6")
+                val ipv4 = ADBUtil.getWlan0IP(device,true)
+                onClick.invoke("查看IP地址", "$ipv4")
             })
             QuickItem(0xe65d, "查看Mac地址", modifier = Modifier.weight(1f).clickable {
-                val result = AdbTool.parseResult("adb -s $device shell ip addr show wlan0 | grep 'link/ether'".runExec())
-                val ipv4 = result.getOrNull(0)?.getOrNull(1)
-                onClick.invoke("查看Mac地址", "$ipv4")
+                onClick.invoke("查看Mac地址", ADBUtil.getMac(device))
             })
             QuickItem(0xe6b2, "重启手机", modifier = Modifier.weight(1f))
             QuickItem(0xe61e, "查看系统属性", modifier = Modifier.weight(1f))
@@ -133,20 +127,20 @@ private fun AboutSystem(device: String, onClick: (title: String, content: String
 private fun AboutKeyBoard(deviceId: String) {
     BaseQuick("按键相关", color = Color(158, 176, 184)) {
         Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe68e, "Home键", modifier = Modifier.weight(1f).clickable { AdbTool.pressHome(deviceId) })
-            QuickItem(0xe616, "Back键", modifier = Modifier.weight(1f).clickable { AdbTool.pressBack(deviceId) })
-            QuickItem(0xe605, "Menu键", modifier = Modifier.weight(1f).clickable { AdbTool.pressMenu(deviceId) })
-            QuickItem(0xe615, "Power键", modifier = Modifier.weight(1f).clickable { AdbTool.pressPower(deviceId) })
+            QuickItem(0xe68e, "Home键", modifier = Modifier.weight(1f).clickable { ADBUtil.inputKey(deviceId,"3") })
+            QuickItem(0xe616, "Back键", modifier = Modifier.weight(1f).clickable { ADBUtil.inputKey(deviceId,"4") })
+            QuickItem(0xe605, "Menu键", modifier = Modifier.weight(1f).clickable { ADBUtil.inputKey(deviceId,"82") })
+            QuickItem(0xe615, "Power键", modifier = Modifier.weight(1f).clickable { ADBUtil.inputKey(deviceId,"26") })
         }
         Spacer(modifier = Modifier.height(14.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe76e, "增加音量", modifier = Modifier.weight(1f).clickable { AdbTool.pressVolumeUp(deviceId) })
+            QuickItem(0xe76e, "增加音量", modifier = Modifier.weight(1f).clickable { ADBUtil.inputKey(deviceId,"24") })
             QuickItem(
                 0xe771,
                 "降低音量",
-                modifier = Modifier.weight(1f).clickable { AdbTool.pressVolumeDown(deviceId) })
-            QuickItem(0xe612, "静音", modifier = Modifier.weight(1f).clickable { AdbTool.pressVolumeMute(deviceId) })
-            QuickItem(0xe658, "切换应用", modifier = Modifier.weight(1f).clickable { AdbTool.pressSwitchApp(deviceId) })
+                modifier = Modifier.weight(1f).clickable { ADBUtil.inputKey(deviceId,"25") })
+            QuickItem(0xe612, "静音", modifier = Modifier.weight(1f).clickable { ADBUtil.inputKey(deviceId,"164") })
+            QuickItem(0xe658, "切换应用", modifier = Modifier.weight(1f).clickable { ADBUtil.inputKey(deviceId,"187") })
         }
         Spacer(modifier = Modifier.height(14.dp))
         Row(modifier = Modifier.fillMaxWidth()) {

@@ -1,4 +1,4 @@
-package page
+package cn.erning.adbutil.page
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
@@ -8,8 +8,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.unit.dp
-import dialog.MessageDialog
-import tool.ADBUtil
+import cn.erning.adbutil.dialog.MessageDialog
+import cn.erning.adbutil.tool.ADBUtil
 import java.awt.FileDialog
 
 @Composable

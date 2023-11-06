@@ -1,4 +1,4 @@
-package tool
+package cn.erning.adbutil.tool
 
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.platform.Typeface

@@ -1,4 +1,4 @@
-package res
+package cn.erning.adbutil.res
 
 import androidx.compose.ui.graphics.Color
 

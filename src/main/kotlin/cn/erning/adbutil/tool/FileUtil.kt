@@ -1,4 +1,4 @@
-package tool
+package cn.erning.adbutil.tool
 
 import java.io.File
 
@@ -16,7 +16,6 @@ object FileUtil {
         if (filePath.contains(pathSplit)) {
             filePath = filePath.substring(0, filePath.indexOf(pathSplit))
         } else if (filePath.endsWith(".jar")) {
-
             // 截取路径中的jar包名,可执行jar包运行的结果里包含".jar"
             filePath = filePath.substring(0, filePath.lastIndexOf(File.separator) + 1)
         }

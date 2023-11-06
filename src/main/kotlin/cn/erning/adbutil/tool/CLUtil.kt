@@ -1,4 +1,4 @@
-package tool
+package cn.erning.adbutil.tool
 
 import java.io.BufferedReader
 import java.io.IOException

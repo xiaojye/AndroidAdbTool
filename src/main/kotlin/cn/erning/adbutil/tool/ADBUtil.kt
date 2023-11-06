@@ -1,9 +1,10 @@
-package tool
+package cn.erning.adbutil.tool
 
-import okio.buffer
-import okio.source
+import cn.erning.adbutil.bean.DeviceInfo
+import cn.erning.adbutil.bean.FileBean
 import java.io.File
 import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * @author erning
@@ -13,40 +14,44 @@ import java.util.*
  */
 object ADBUtil {
     private var ADB_PATH = getAdbPath()
-    private val COMMAND_GET_DEVICES = arrayOf("devices","-l")
-
-    private fun getAdbPath(): String {
-        var adbPath: String = if (System.getProperties().getProperty("os.name").lowercase(Locale.getDefault()).startsWith("windows")) {
-            File(FileUtil.getSelfPath()).absolutePath + "\\adb.exe"
-        } else {
-            File(FileUtil.getSelfPath()).absolutePath + "/adb"
-        }
-        if (File(adbPath).exists()) {
-            println("找到ADB文件：$adbPath")
-            return adbPath
-        }
-        println("ADB文件不存在，使用环境变量")
-        adbPath = "adb"
-        return adbPath
-    }
 
     /**
      * 检查有没有ADB
      */
     fun checkADB(): Boolean {
         val command = arrayOf("--version")
-        val result = CLUtil.execute(arrayOf(ADB_PATH,*command))
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
         val data = parseResult(result)
         val versionLine = getLineWithStart("Version",data)
         return versionLine != null
     }
 
     /**
+     * 获取设备列表
+     */
+    fun getDevice(): ArrayList<DeviceInfo> {
+        val command = arrayOf("devices","-l")
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
+        val data = parseResult(result)
+        val list = arrayListOf<DeviceInfo>()
+        data.forEachIndexed { index, arr ->
+            if (index != 0){
+                val id = arr.getOrNull(0)?.split(":")?.firstOrNull() ?: ""
+                val name = arr.getOrNull(4)?.split(":")?.getOrNull(1) ?: ""
+                val model = arr.getOrNull(3)?.split(":")?.getOrNull(1) ?: ""
+                val device = DeviceInfo(name,model,id)
+                list.add(device)
+            }
+        }
+        return list
+    }
+
+    /**
      * 打开tcpip 5555
      */
-    fun openWIFIConnect(device: String): Boolean {
-        val command = arrayOf("-s",device,"tcpip","5555")
-        val result = CLUtil.execute(arrayOf(ADB_PATH,*command))
+    fun openWIFIConnect(deviceId: String): Boolean {
+        val command = arrayOf("-s",deviceId,"tcpip","5555")
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
         val data = parseResult(result)
         return data.firstOrNull()?.firstOrNull()?.equals("restarting",true) ?: false
     }
@@ -54,9 +59,9 @@ object ADBUtil {
     /**
      * 连接设备
      */
-    fun connectDevice(device: String): Boolean {
-        val command = arrayOf("connect",device)
-        val result = CLUtil.execute(arrayOf(ADB_PATH,*command))
+    fun connectDevice(deviceId: String): Boolean {
+        val command = arrayOf("connect",deviceId)
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
         val data = parseResult(result)
         return data.firstOrNull()?.firstOrNull()?.equals("connected",true) ?: false
     }
@@ -64,9 +69,9 @@ object ADBUtil {
     /**
      * 断开设备
      */
-    fun disconnectDevice(device: String): Boolean {
-        val command = arrayOf("disconnect",device)
-        val result = CLUtil.execute(arrayOf(ADB_PATH,*command))
+    fun disconnectDevice(deviceId: String): Boolean {
+        val command = arrayOf("disconnect",deviceId)
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
         val data = parseResult(result)
         return data.firstOrNull()?.firstOrNull()?.equals("disconnected",true) ?: false
     }
@@ -80,7 +85,7 @@ object ADBUtil {
      */
     fun install(deviceId:String,filePath:String){
         val command = arrayOf("-s",deviceId,"install",filePath)
-        val result = CLUtil.execute(arrayOf(ADB_PATH,*command))
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
         val data = parseResult(result)
         if(data.getOrNull(1)?.firstOrNull()?.equals("success",true) != true){
             if (data.joinToString(" ").contains("INSTALL_FAILED_DEPRECATED_SDK_VERSION")){
@@ -98,7 +103,7 @@ object ADBUtil {
      */
     private fun installLow(deviceId:String,filePath:String){
         val command = arrayOf("-s",deviceId,"install","--bypass-low-target-sdk-block",filePath)
-        val result = CLUtil.execute(arrayOf(ADB_PATH,*command))
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
         val data = parseResult(result)
         if(data.getOrNull(1)?.firstOrNull()?.equals("success",true) != true){
             throw RuntimeException(data.joinToString(" \\n "){
@@ -117,15 +122,34 @@ object ADBUtil {
      *     inet6 fe80::c466:99ff:fec5:fa97/64 scope link
      *         valid_lft forever preferred_lft forever
      */
-    fun getWlan0IP(id:String): String? {
-        val command = arrayOf("-s",id,"shell","ip","addr","show","wlan0")
-        val result = CLUtil.execute(arrayOf(ADB_PATH,*command))
+    fun getWlan0IP(deviceId:String,v4:Boolean = true): String? {
+        val command = arrayOf("-s",deviceId,"shell","ip","addr","show","wlan0","|","grep","'inet'","|","cut","-d","'/'","-f","1")
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
         val data = parseResult(result)
-        val line = getLineWithStart("inet",data)
-        if(line != null){
-            return line.getOrNull(1)?.split("/")?.getOrNull(0)
+        return if (v4){
+            data.getOrNull(0)?.lastOrNull()
+        }else{
+            data.getOrNull(1)?.lastOrNull()
         }
-        return null
+    }
+
+    /**
+     * 获取Mac地址
+     */
+    fun getMac(deviceId:String): String {
+        val command = arrayOf("-s",deviceId,"shell","ip","addr","show","wlan0","|","grep","'link/ether'")
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
+        val data = parseResult(result)
+        return data.getOrNull(0)?.getOrNull(1) ?: ""
+    }
+
+    /**
+     * 获取AndroidId
+     */
+    fun getAndroidId(deviceId:String): String {
+        val command = arrayOf("-s",deviceId,"shell","settings","get","secure","android_id")
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
+        return result
     }
 
     /**
@@ -184,11 +208,55 @@ object ADBUtil {
     }
 
     /**
+     * 输入按键
+     * Home:3 返回:4 增加音量:24 降低音量:25 电源:26 菜单:82 静音:164 切换应用:187
+     */
+    fun inputKey(deviceId: String, event: String){
+        val command = arrayOf("-s", deviceId, "shell","input","keyevent", event)
+        CLUtil.execute(arrayOf(ADB_PATH, *command))
+    }
+
+    /**
      * 导出文件
      */
     fun exportFile(deviceId: String,deviceFile: String, localFile: String) {
         val command = arrayOf("-s", deviceId, "pull", deviceFile, localFile)
         CLUtil.execute(arrayOf(ADB_PATH, *command))
+    }
+
+    /**
+     * 列出文件
+     */
+    fun fileList(deviceId: String,dir:String): ArrayList<FileBean> {
+        val command = arrayOf("-s", deviceId, "shell","ls","-FA", dir)
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
+        val data = parseResult(result)
+        val list = arrayListOf<FileBean>()
+        data.forEach {
+            val line = it.joinToString("") { it }
+            val isDir = line.endsWith("/")
+            val bean = FileBean(if (isDir) line.removeSuffix("/") else line, isDir)
+            list.add(bean)
+        }
+        return list
+    }
+
+    /**
+     * 获取ADB路径
+     */
+    private fun getAdbPath(): String {
+        var adbPath: String = if (System.getProperties().getProperty("os.name").lowercase(Locale.getDefault()).startsWith("windows")) {
+            File(FileUtil.getSelfPath()).absolutePath + "\\adb.exe"
+        } else {
+            File(FileUtil.getSelfPath()).absolutePath + "/adb"
+        }
+        if (File(adbPath).exists()) {
+            println("找到ADB文件：$adbPath")
+            return adbPath
+        }
+        println("ADB文件不存在，使用环境变量")
+        adbPath = "adb"
+        return adbPath
     }
 
     private fun getLineWithStart(start:String,data:Array<Array<String>>,ignoreCase:Boolean = true): Array<String>? {
