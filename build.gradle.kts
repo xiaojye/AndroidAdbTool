@@ -27,7 +27,7 @@ tasks.withType<KotlinCompile> {
 
 compose.desktop {
     application {
-        mainClass = "cn.erning.adbutil.MainKt"
+        mainClass = "MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Deb, TargetFormat.Exe)
             packageName = "AndroidAdbTool"
@@ -38,7 +38,7 @@ compose.desktop {
 
 tasks.withType<Jar> {
     manifest {
-        attributes["Main-Class"] = "cn.erning.adbutil.MainKt"
+        attributes["Main-Class"] = "MainKt"
     }
 }
 
