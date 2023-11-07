@@ -41,7 +41,10 @@ import java.io.File
 fun main() = application {
     FileUtil.releaseAdb()
     Window(
-        onCloseRequest = ::exitApplication,
+        onCloseRequest = {
+            FileUtil.cleanCache()
+            exitApplication()
+        },
         title = "AndroidAdbTool",
         visible = true,
         state = WindowState(size = DpSize(width = 1200.dp, height = 900.dp))
@@ -73,7 +76,7 @@ fun App() {
                 0 -> CurrentAppInfoPage(device)
                 1 -> PhoneInfoPage(device)
                 2 -> QuickPage(device)
-                3 -> FileManager(device)
+                3 -> FileManager(device,ADBUtil.hasRoot(device))
             }
         }
     }

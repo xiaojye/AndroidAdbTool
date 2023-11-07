@@ -70,13 +70,13 @@ private fun CommonFunction(device: String) {
 
     BaseQuick("常用功能", color = Color(255, 152, 0)) {
         Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe693, "安装应用", modifier = Modifier.weight(1f).clickable {
+            QuickItem(0xe693, "安装应用（外部）", modifier = Modifier.weight(1f).clickable {
                 CLUtil.execute(arrayOf("java","-jar","/Users/erning/Program/Java/ApkInstaller_jar/ApkInstaller.jar"))
             })
             QuickItem(0xe816, "输入文本", modifier = Modifier.weight(1f).clickable {
                 showInputTextDialog = true
             })
-            QuickItem(0xe931, "截图保存到电脑", modifier = Modifier.weight(1f))
+            QuickItem(0xe931, "截图保存到桌面", modifier = Modifier.weight(1f))
             QuickItem(modifier = Modifier.weight(1f))
         }
     }
@@ -101,14 +101,7 @@ private fun AboutSystem(device: String, onClick: (title: String, content: String
     BaseQuick("系统相关", color = Color(255, 193, 7)) {
         Row(modifier = Modifier.fillMaxWidth()) {
             QuickItem(0xe695, "开始录屏", modifier = Modifier.weight(1f))
-            QuickItem(0xe71d, "结束录屏保存到电脑", modifier = Modifier.weight(1f))
-            QuickItem(0xe881, "查看AndroidId", modifier = Modifier.weight(1f).clickable {
-                onClick.invoke("查看AndroidId", ADBUtil.getAndroidId(device))
-            })
-            QuickItem(0xe617, "查看系统版本", modifier = Modifier.weight(1f))
-        }
-        Spacer(modifier = Modifier.height(14.dp))
-        Row(modifier = Modifier.fillMaxWidth()) {
+            QuickItem(0xe71d, "结束录屏保存到桌面", modifier = Modifier.weight(1f))
             QuickItem(0xe632, "查看IP地址", modifier = Modifier.weight(1f).clickable {
                 val ipv4 = ADBUtil.getWlan0IP(device,true)
                 onClick.invoke("查看IP地址", "$ipv4")
@@ -116,8 +109,13 @@ private fun AboutSystem(device: String, onClick: (title: String, content: String
             QuickItem(0xe65d, "查看Mac地址", modifier = Modifier.weight(1f).clickable {
                 onClick.invoke("查看Mac地址", ADBUtil.getMac(device))
             })
+        }
+        Spacer(modifier = Modifier.height(14.dp))
+        Row(modifier = Modifier.fillMaxWidth()) {
             QuickItem(0xe6b2, "重启手机", modifier = Modifier.weight(1f))
-            QuickItem(0xe61e, "查看系统属性", modifier = Modifier.weight(1f))
+            QuickItem(0xe6b2, "重启到Recover", modifier = Modifier.weight(1f))
+            QuickItem(0xe6b2, "重启到Fastboot", modifier = Modifier.weight(1f))
+            QuickItem(modifier = Modifier.weight(1f))
         }
     }
 }
@@ -137,26 +135,16 @@ private fun AboutKeyBoard(deviceId: String) {
         Spacer(modifier = Modifier.height(14.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
             QuickItem(0xe76e, "增加音量", modifier = Modifier.weight(1f).clickable { ADBUtil.inputKey(deviceId,"24") })
-            QuickItem(
-                0xe771,
-                "降低音量",
-                modifier = Modifier.weight(1f).clickable { ADBUtil.inputKey(deviceId,"25") })
+            QuickItem(0xe771, "降低音量", modifier = Modifier.weight(1f).clickable { ADBUtil.inputKey(deviceId,"25") })
             QuickItem(0xe612, "静音", modifier = Modifier.weight(1f).clickable { ADBUtil.inputKey(deviceId,"164") })
             QuickItem(0xe658, "切换应用", modifier = Modifier.weight(1f).clickable { ADBUtil.inputKey(deviceId,"187") })
         }
         Spacer(modifier = Modifier.height(14.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe795, "向上滑动", modifier = Modifier.weight(1f))
-            QuickItem(0xe603, "向下滑动", modifier = Modifier.weight(1f))
-            QuickItem(0xe60a, "向左滑动", modifier = Modifier.weight(1f))
-            QuickItem(0xe6ca, "向右滑动", modifier = Modifier.weight(1f))
-        }
-        Spacer(modifier = Modifier.height(14.dp))
-        Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe697, "屏幕点击", modifier = Modifier.weight(1f))
-            QuickItem(modifier = Modifier.weight(1f))
-            QuickItem(modifier = Modifier.weight(1f))
-            QuickItem(modifier = Modifier.weight(1f))
+            QuickItem(0xe795, "向上滑动", modifier = Modifier.weight(1f).clickable { ADBUtil.inputSwipe(deviceId,"300","800","300","200") })
+            QuickItem(0xe603, "向下滑动", modifier = Modifier.weight(1f).clickable { ADBUtil.inputSwipe(deviceId,"300","200","300","800") })
+            QuickItem(0xe603, "向左滑动", modifier = Modifier.weight(1f).clickable { ADBUtil.inputSwipe(deviceId,"800","300","200","300") })
+            QuickItem(0xe60a, "向右滑动", modifier = Modifier.weight(1f).clickable { ADBUtil.inputSwipe(deviceId,"200","300","800","300") })
         }
     }
 }

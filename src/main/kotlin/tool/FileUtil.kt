@@ -1,5 +1,6 @@
 package tool
 
+import java.awt.Desktop
 import java.io.File
 import java.nio.file.Files
 import java.util.*
@@ -38,16 +39,24 @@ object FileUtil {
     }
 
     fun releaseAdb(){
-        if (System.getProperties().getProperty("os.name").lowercase(Locale.getDefault()).startsWith("windows")){
-            releaseFile(getSelfPath(),"adb.exe","bin/adb.exe")
-            releaseFile(getSelfPath(),"AdbWinApi.dll","bin/AdbWinApi.dll")
-            releaseFile(getSelfPath(),"AdbWinUsbApi.dll","AdbWinUsbApi.dll")
-        }else{
-            releaseFile(getSelfPath(),"adb","bin/adb")
+        val adbDir = File(getSelfPath(),"runtimeAdbFiles")
+        if(adbDir.isFile){
+            adbDir.delete()
+        }
+        if (!adbDir.exists()){
+            adbDir.mkdirs()
+            adbDir.setWritable(true,false)
+            if (System.getProperties().getProperty("os.name").lowercase(Locale.getDefault()).startsWith("windows")){
+                releaseFile(adbDir,"adb.exe","bin"+File.separator+"adb.exe")
+                releaseFile(adbDir,"AdbWinApi.dll","bin"+File.separator+"AdbWinApi.dll")
+                releaseFile(adbDir,"AdbWinUsbApi.dll","bin"+File.separator+"AdbWinUsbApi.dll")
+            }else{
+                releaseFile(adbDir,"adb","bin"+File.separator+"adb")
+            }
         }
     }
 
-    private fun releaseFile(dir:String,fileName:String,packageFile:String){
+    private fun releaseFile(dir:File,fileName:String,packageFile:String){
         val file = File(dir,fileName)
         if (!file.exists()){
             ClassLoader.getSystemResourceAsStream(packageFile)?.use {
@@ -56,5 +65,42 @@ object FileUtil {
             }
             file.setExecutable(true,false)
         }
+    }
+
+    fun getCacheDir(): File {
+        val cacheDir = File(getSelfPath(),"runtimeCache")
+        if(cacheDir.isFile){
+            cacheDir.delete()
+        }
+        if (!cacheDir.exists()){
+            cacheDir.mkdirs()
+        }
+        return cacheDir
+    }
+
+    fun cleanCache(){
+        getCacheDir().deleteRecursively()
+    }
+
+    fun openFileWithDefault(file:File?){
+        file ?: return
+        if(!file.exists()){
+            return
+        }
+        try {
+            Desktop.getDesktop().open(file)
+        }catch (ignore:Exception){
+            openFileInExplorer(file)
+        }
+    }
+
+    fun openFileInExplorer(file:File?){
+        file ?: return
+        if(!file.exists()){
+            return
+        }
+        try {
+            Desktop.getDesktop().browseFileDirectory(file)
+        }catch (ignore:Exception){ }
     }
 }

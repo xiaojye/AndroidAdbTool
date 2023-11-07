@@ -4,10 +4,13 @@ import bean.DeviceInfo
 import bean.FileBean
 import java.io.File
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 /**
  * @author erning
  * @date 2022/7/8 14:37
+ * https://blog.csdn.net/zx54633089/article/details/115346785
  */
 object ADBUtil {
     private var ADB_PATH = getAdbPath()
@@ -41,6 +44,15 @@ object ADBUtil {
             }
         }
         return list
+    }
+
+    /**
+     * 是否有Root
+     */
+    fun hasRoot(deviceId: String): Boolean {
+        val command = arrayOf("-s",deviceId,"shell","su","-c","ls","/")
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
+        return result.trim().isNotEmpty()
     }
 
     /**
@@ -111,13 +123,6 @@ object ADBUtil {
 
     /**
      * 获取wlan0的ip地址
-     * adb返回内容如下：
-     * 13: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 3000
-     *     link/ether c6:66:99:c5:fa:97 brd ff:ff:ff:ff:ff:ff
-     *     inet 10.200.89.54/23 brd 10.200.89.255 scope global wlan0
-     *         valid_lft forever preferred_lft forever
-     *     inet6 fe80::c466:99ff:fec5:fa97/64 scope link
-     *         valid_lft forever preferred_lft forever
      */
     fun getWlan0IP(deviceId:String,v4:Boolean = true): String? {
         val command = arrayOf("-s",deviceId,"shell","ip","addr","show","wlan0","|","grep","'inet'","|","cut","-d","'/'","-f","1")
@@ -143,10 +148,9 @@ object ADBUtil {
     /**
      * 获取AndroidId
      */
-    fun getAndroidId(deviceId:String): String {
-        val command = arrayOf("-s",deviceId,"shell","settings","get","secure","android_id")
-        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
-        return result
+    fun getAndroidId(deviceId: String): String {
+        val command = arrayOf("-s", deviceId, "shell","settings","get","secure","android_id")
+        return CLUtil.execute(arrayOf(ADB_PATH, *command)).trim()
     }
 
     /**
@@ -206,10 +210,23 @@ object ADBUtil {
 
     /**
      * 输入按键
-     * Home:3 返回:4 增加音量:24 降低音量:25 电源:26 菜单:82 静音:164 切换应用:187
+     * 3:HOME键 4:返回键 5:打开拨号应用 6:挂断电话 24:增加音量 25:降低音量 26:电源键 27:拍照（需要在相机应用里）
+     * 64:打开浏览器 82:菜单键 85:播放/暂停 86:停止播放 87:播放下一首 88:播放上一首
+     * 122:移动光标到行首或列表顶部 123:移动光标到行末或列表底部
+     * 126:恢复播放 127:暂停播放 164:静音
+     * 176:打开系统设置 187:切换应用 207:打开联系人 208:打开日历 209:打开音乐 210:打开计算器
+     * 220:降低屏幕亮度 221:提高屏幕亮度 223:系统休眠 224:点亮屏幕 231:打开语音助手
      */
     fun inputKey(deviceId: String, event: String){
         val command = arrayOf("-s", deviceId, "shell","input","keyevent", event)
+        CLUtil.execute(arrayOf(ADB_PATH, *command))
+    }
+
+    /**
+     * 输入滑动
+     */
+    fun inputSwipe(deviceId: String, startX: String, startY: String, endX: String, endY: String){
+        val command = arrayOf("-s", deviceId, "shell","input","swipe", startX,startY,endX,endY)
         CLUtil.execute(arrayOf(ADB_PATH, *command))
     }
 
@@ -224,36 +241,86 @@ object ADBUtil {
     /**
      * 列出文件
      */
-    fun fileList(deviceId: String,dir:String): ArrayList<FileBean> {
-        val command = arrayOf("-s", deviceId, "shell","ls","-FA", dir)
+    fun fileList(deviceId: String,dir:String,su:Boolean = false): ArrayList<FileBean> {
+        val command = arrayOf("-s", deviceId, "shell",if (su) "su -c" else "","ls","-p","-s","-A","-L","-h", dir)
         val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
         val data = parseResult(result)
         val list = arrayListOf<FileBean>()
         data.forEach {
-            val line = it.joinToString("") { it }
-            val isDir = line.endsWith("/")
-            val bean = FileBean(if (isDir) line.removeSuffix("/") else line, isDir)
-            list.add(bean)
+            if (it.firstOrNull()?.startsWith("total",true) == false){
+                val size = it.getOrNull(0) ?: "?"
+                val fileName = (it.getOrNull(1) ?: "")
+                val isDir = fileName.endsWith("/")
+                val bean = FileBean(fileName.removeSuffix("/"), isDir,size)
+                bean.parent = dir
+                list.add(bean)
+            }
         }
         return list
+    }
+
+    /**
+     * 删除文件
+     */
+    fun deleteFile(deviceId: String,file:String,su:Boolean = false) {
+        val command = arrayOf("-s", deviceId, "shell",if (su) "su -c" else "","rm","-r", file)
+        CLUtil.execute(arrayOf(ADB_PATH, *command))
+    }
+
+    /**
+     * 获取系统信息
+     */
+    fun getProp(deviceId: String,key:String = ""): HashMap<String, String> {
+        val command = arrayOf("-s", deviceId, "shell","getprop" ,key)
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
+        val map = hashMapOf<String,String>()
+        if (key.isNotEmpty()){
+            map[key] = result
+        }else{
+            result.split("\n").forEach {
+                val data = it.removePrefix("[").removeSuffix("]").split("]: [")
+                map[data.getOrNull(0)?:""] = data.getOrNull(1)?:""
+            }
+        }
+        return map
+    }
+
+    /**
+     * 获取分辨率
+     */
+    fun getPhysicalSize(deviceId: String): String {
+        val command = arrayOf("-s", deviceId, "shell","wm","size")
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
+        val data = parseResult(result)
+        return data.getOrNull(0)?.lastOrNull() ?: ""
+    }
+
+    /**
+     * 获取dpi
+     */
+    fun getDensity(deviceId: String): String {
+        val command = arrayOf("-s", deviceId, "shell","wm","density")
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
+        val data = parseResult(result)
+        return data.getOrNull(0)?.lastOrNull() ?: ""
     }
 
     /**
      * 获取ADB路径
      */
     private fun getAdbPath(): String {
-        var adbPath: String = if (System.getProperties().getProperty("os.name").lowercase(Locale.getDefault()).startsWith("windows")) {
-            File(FileUtil.getSelfPath()).absolutePath + "\\adb.exe"
+        val adbDir = File(FileUtil.getSelfPath() +File.separator+"runtimeAdbFiles")
+        val adbFile = if (System.getProperties().getProperty("os.name").lowercase(Locale.getDefault()).startsWith("windows")) {
+            File(adbDir,"adb.exe")
         } else {
-            File(FileUtil.getSelfPath()).absolutePath + "/adb"
+            File(adbDir,"adb")
         }
-        if (File(adbPath).exists()) {
-            println("找到ADB文件：$adbPath")
-            return adbPath
+        if (adbFile.exists()) {
+            println("找到ADB文件：${adbFile.absolutePath}")
+            return adbFile.absolutePath
         }
         println("ADB文件不存在，使用环境变量")
-        adbPath = "adb"
-        return adbPath
+        return "adb"
     }
 
     private fun getLineWithStart(start:String,data:Array<Array<String>>,ignoreCase:Boolean = true): Array<String>? {
@@ -288,7 +355,7 @@ object ADBUtil {
     }
 
     private fun parseLine(line:String?):Array<String>{
-        if(line == null || line.isBlank()){
+        if(line.isNullOrBlank()){
             return emptyArray()
         }
         val lines = line.replace("\t"," ").split(" ").filter { it.trim().isNotBlank() }
