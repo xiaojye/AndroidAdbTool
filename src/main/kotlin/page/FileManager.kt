@@ -73,9 +73,9 @@ fun FileManager(deviceId: String,root:Boolean = false) {
                     val list = arrayListOf<ContextMenuItem>()
                     if(item.fold){
                     }else{
-                        list.add(ContextMenuItem("默认方式打开") { pullFileToCache(deviceId,item,true) })
+                        list.add(ContextMenuItem("默认方式打开") { pullFileToCache(deviceId,item,true,root) })
                     }
-                    list.add(ContextMenuItem("导出到电脑") { pullFile(deviceId,item,false) })
+                    list.add(ContextMenuItem("导出到电脑") { pullFile(deviceId,item,false,root) })
                     list.add(ContextMenuItem("删除") { showDeleteDialog = item })
                     list
                 }
@@ -93,7 +93,7 @@ fun FileManager(deviceId: String,root:Boolean = false) {
                             fileList.clear()
                             foldName = "$foldName${item.name}/"
                         } else {
-                            pullFileToCache(deviceId,item,true)
+                            pullFileToCache(deviceId,item,true,root)
                         }
                     })
                         .fillMaxWidth()
@@ -126,28 +126,25 @@ fun FileManager(deviceId: String,root:Boolean = false) {
     }
 }
 
-private fun pullFile(deviceId: String,source:FileBean,open:Boolean){
+private fun pullFile(deviceId: String,source:FileBean,open:Boolean,root:Boolean){
     val fileDialog = FileDialog(ComposeWindow(),"导出文件", FileDialog.SAVE)
     fileDialog.isMultipleMode = false
     fileDialog.isVisible = true
     val directory = fileDialog.directory?.replace("\n","")?.replace("\r","")
     if (directory != null) {
         val path = "$directory${source.name}"
-        ADBUtil.exportFile(deviceId,"${source.parent}${source.name}",path)
+        ADBUtil.exportFile(deviceId,"${source.parent}${source.name}",path,root)
         if (open){
             FileUtil.openFileWithDefault(File(path))
         }
     }
 }
 
-private fun pullFileToCache(deviceId: String,source:FileBean,open:Boolean){
+private fun pullFileToCache(deviceId: String,source:FileBean,open:Boolean,root:Boolean){
     val cacheDir = FileUtil.getCacheDir()
     val file = File(cacheDir,source.name)
-    ADBUtil.exportFile(deviceId,"${source.parent}${source.name}",file.absolutePath)
+    ADBUtil.exportFile(deviceId,"${source.parent}${source.name}",file.absolutePath,root)
     if (open){
         FileUtil.openFileWithDefault(file)
     }
-}
-
-private fun delete(deviceId: String,source:FileBean){
 }

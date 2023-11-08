@@ -90,7 +90,8 @@ object FileUtil {
         }
         try {
             Desktop.getDesktop().open(file)
-        }catch (ignore:Exception){
+        }catch (e:Exception){
+            e.printStackTrace()
             openFileInExplorer(file)
         }
     }

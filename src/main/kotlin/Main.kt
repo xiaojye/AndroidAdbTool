@@ -22,6 +22,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import bean.DeviceInfo
@@ -47,7 +48,12 @@ fun main() = application {
         },
         title = "AndroidAdbTool(${this::class.java.`package`.implementationVersion})",
         visible = true,
-        state = WindowState(size = DpSize(width = 1200.dp, height = 900.dp))
+        state = WindowState(
+            // size = DpSize(width = 1200.dp, height = 900.dp),
+            size = DpSize(width = 800.dp, height = 800.dp),
+            // size = DpSize(width = 675.dp, height = 800.dp), // 最小
+            position = WindowPosition(Alignment.Center)
+        )
     ) {
         App()
     }

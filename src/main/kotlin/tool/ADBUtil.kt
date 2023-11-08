@@ -237,8 +237,32 @@ object ADBUtil {
     /**
      * 导出文件
      */
-    fun exportFile(deviceId: String,deviceFile: String, localFile: String) {
+    fun exportFile(deviceId: String,deviceFile: String, localFile: String,su:Boolean = false) {
         val command = arrayOf("-s", deviceId, "pull", deviceFile, localFile)
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
+        if (result.contains("Permission denied",true)){
+            // 没有权限
+            val deviceFileName = deviceFile.split(File.separator).last()
+            copyFile(deviceId,deviceFile,"/data/local/tmp/${deviceFileName}",su)
+            setPermission(deviceId,"777","/data/local/tmp/${deviceFileName}",su)
+            val command2 = arrayOf("-s", deviceId, "pull", "/data/local/tmp/${deviceFileName}", localFile)
+            CLUtil.execute(arrayOf(ADB_PATH, *command2))
+        }
+    }
+
+    /**
+     * 复制文件
+     */
+    fun copyFile(deviceId: String,originalFile: String,targetFile: String,su:Boolean = false){
+        val command = arrayOf("-s", deviceId, "shell",if (su) "su -c" else "","cp", originalFile, targetFile)
+        CLUtil.execute(arrayOf(ADB_PATH, *command))
+    }
+
+    /**
+     * 设置文件权限
+     */
+    fun setPermission(deviceId: String,permission:String,file: String,su:Boolean = false){
+        val command = arrayOf("-s", deviceId, "shell",if (su) "su -c" else "","chmod", "-R", permission,file)
         CLUtil.execute(arrayOf(ADB_PATH, *command))
     }
 
@@ -354,7 +378,7 @@ object ADBUtil {
      * 获取ADB路径
      */
     private fun getAdbPath(): String {
-        val adbDir = File(FileUtil.getSelfPath() +File.separator+"runtimeAdbFiles")
+        val adbDir = File(FileUtil.getSelfPath(),"runtimeAdbFiles")
         val adbFile = if (System.getProperties().getProperty("os.name").lowercase(Locale.getDefault()).startsWith("windows")) {
             File(adbDir,"adb.exe")
         } else {
