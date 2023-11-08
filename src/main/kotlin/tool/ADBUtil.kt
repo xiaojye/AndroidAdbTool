@@ -4,8 +4,6 @@ import bean.DeviceInfo
 import bean.FileBean
 import java.io.File
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 /**
  * @author erning
@@ -36,11 +34,15 @@ object ADBUtil {
         val list = arrayListOf<DeviceInfo>()
         data.forEachIndexed { index, arr ->
             if (index != 0){
+                val offline = arr.getOrNull(1).equals("offline",true)
                 val id = arr.getOrNull(0)?.split(":")?.firstOrNull() ?: ""
-                val name = arr.getOrNull(4)?.split(":")?.getOrNull(1) ?: ""
                 val model = arr.getOrNull(3)?.split(":")?.getOrNull(1) ?: ""
+                val name = arr.getOrNull(4)?.split(":")?.getOrNull(1) ?: ""
                 val device = DeviceInfo(name,model,id)
-                list.add(device)
+                device.offline = offline
+                if(!offline) {
+                    list.add(device)
+                }
             }
         }
         return list
@@ -306,6 +308,24 @@ object ADBUtil {
     }
 
     /**
+     * 重启
+     */
+    fun reboot(deviceId: String,type:RebootType = RebootType.SYSTEM){
+        val command = arrayOf("-s", deviceId, "reboot",type.type)
+        CLUtil.execute(arrayOf(ADB_PATH, *command))
+    }
+
+    /**
+     * 截图
+     */
+    fun screenshot(deviceId: String,file: String? = null): String {
+        val mFile = file ?: "/sdcard/${System.currentTimeMillis()}.png"
+        val command = arrayOf("-s", deviceId, "shell","screencap",mFile)
+        CLUtil.execute(arrayOf(ADB_PATH, *command))
+        return mFile
+    }
+
+    /**
      * 获取ADB路径
      */
     private fun getAdbPath(): String {
@@ -360,5 +380,9 @@ object ADBUtil {
         }
         val lines = line.replace("\t"," ").split(" ").filter { it.trim().isNotBlank() }
         return lines.toTypedArray()
+    }
+
+    enum class RebootType(val type:String){
+        SYSTEM(""), RECOVER("recovery"), FASTBOOT("bootloader")
     }
 }

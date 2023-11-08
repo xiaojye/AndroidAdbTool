@@ -19,7 +19,11 @@ import dialog.InputDialog
 import res.randomColor
 import tool.ADBUtil
 import tool.CLUtil
+import tool.FileUtil
 import tool.ttfFontFamily
+import java.awt.Desktop
+import java.io.File
+import javax.swing.filechooser.FileSystemView
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -28,17 +32,6 @@ import kotlin.random.nextInt
  */
 @Composable
 fun QuickPage(device: String) {
-    var dialogTitle by remember { mutableStateOf("") }
-    var dialogContent by remember { mutableStateOf("") }
-
-
-    if (dialogContent.isNotEmpty()) {
-        MessageDialog2(dialogTitle, dialogContent) {
-            dialogTitle = ""
-            dialogContent = ""
-        }
-    }
-
     LazyColumn(
         modifier = Modifier.fillMaxHeight().padding(horizontal = 8.dp, vertical = 12.dp).fillMaxWidth(),
     ) {
@@ -47,10 +40,7 @@ fun QuickPage(device: String) {
             Spacer(modifier = Modifier.height(16.dp))
             CommonFunction(device)
             Spacer(modifier = Modifier.height(16.dp))
-            AboutSystem(device) { title, content ->
-                dialogTitle = title
-                dialogContent = content
-            }
+            AboutSystem(device)
             Spacer(modifier = Modifier.height(16.dp))
             AboutKeyBoard(device)
             Spacer(modifier = Modifier.height(16.dp))
@@ -76,7 +66,12 @@ private fun CommonFunction(device: String) {
             QuickItem(0xe816, "输入文本", modifier = Modifier.weight(1f).clickable {
                 showInputTextDialog = true
             })
-            QuickItem(0xe931, "截图保存到桌面", modifier = Modifier.weight(1f))
+            QuickItem(0xe931, "截图保存到桌面", modifier = Modifier.weight(1f).clickable {
+                val deviceFile = ADBUtil.screenshot(device)
+                val localFile = File(FileUtil.getDesktopFile(),deviceFile.split("/").last()).absolutePath
+                ADBUtil.exportFile(device,deviceFile,localFile)
+                ADBUtil.deleteFile(device,deviceFile)
+            })
             QuickItem(modifier = Modifier.weight(1f))
         }
     }
@@ -97,24 +92,12 @@ private fun CommonFunction(device: String) {
  * 系统相关
  */
 @Composable
-private fun AboutSystem(device: String, onClick: (title: String, content: String) -> Unit) {
+private fun AboutSystem(device: String) {
     BaseQuick("系统相关", color = Color(255, 193, 7)) {
         Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe695, "开始录屏", modifier = Modifier.weight(1f))
-            QuickItem(0xe71d, "结束录屏保存到桌面", modifier = Modifier.weight(1f))
-            QuickItem(0xe632, "查看IP地址", modifier = Modifier.weight(1f).clickable {
-                val ipv4 = ADBUtil.getWlan0IP(device,true)
-                onClick.invoke("查看IP地址", "$ipv4")
-            })
-            QuickItem(0xe65d, "查看Mac地址", modifier = Modifier.weight(1f).clickable {
-                onClick.invoke("查看Mac地址", ADBUtil.getMac(device))
-            })
-        }
-        Spacer(modifier = Modifier.height(14.dp))
-        Row(modifier = Modifier.fillMaxWidth()) {
-            QuickItem(0xe6b2, "重启手机", modifier = Modifier.weight(1f))
-            QuickItem(0xe6b2, "重启到Recover", modifier = Modifier.weight(1f))
-            QuickItem(0xe6b2, "重启到Fastboot", modifier = Modifier.weight(1f))
+            QuickItem(0xe6b2, "重启手机", modifier = Modifier.weight(1f).clickable { ADBUtil.reboot(device,ADBUtil.RebootType.SYSTEM) })
+            QuickItem(0xe6b2, "重启到Recover", modifier = Modifier.weight(1f).clickable { ADBUtil.reboot(device,ADBUtil.RebootType.RECOVER) })
+            QuickItem(0xe6b2, "重启到Fastboot", modifier = Modifier.weight(1f).clickable { ADBUtil.reboot(device,ADBUtil.RebootType.FASTBOOT) })
             QuickItem(modifier = Modifier.weight(1f))
         }
     }

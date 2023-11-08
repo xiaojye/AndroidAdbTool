@@ -1,3 +1,5 @@
 package bean
 
-data class DeviceInfo(val deviceName: String, val deviceModel: String, val device: String)
+data class DeviceInfo(val deviceName: String, val deviceModel: String, val device: String){
+    var offline = false
+}

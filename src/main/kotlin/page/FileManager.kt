@@ -81,14 +81,21 @@ fun FileManager(deviceId: String,root:Boolean = false) {
                 }
             ){
                 Row(
-                    modifier = Modifier
-                        .clickable {
-                            if (item.fold) {
-                                // 去当前文件夹
-                                fileList.clear()
-                                foldName = "$foldName${item.name}/"
-                            }
+                    modifier = Modifier.combinedClickable(onClick = {
+                        if (item.fold) {
+                            // 去当前文件夹
+                            fileList.clear()
+                            foldName = "$foldName${item.name}/"
                         }
+                    }, onDoubleClick = {
+                        if (item.fold) {
+                            // 去当前文件夹
+                            fileList.clear()
+                            foldName = "$foldName${item.name}/"
+                        } else {
+                            pullFileToCache(deviceId,item,true)
+                        }
+                    })
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically) {

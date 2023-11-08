@@ -4,6 +4,7 @@ import java.awt.Desktop
 import java.io.File
 import java.nio.file.Files
 import java.util.*
+import javax.swing.filechooser.FileSystemView
 
 /**
  * @auth 二宁
@@ -102,5 +103,9 @@ object FileUtil {
         try {
             Desktop.getDesktop().browseFileDirectory(file)
         }catch (ignore:Exception){ }
+    }
+
+    fun getDesktopFile(): File {
+        return File(FileSystemView.getFileSystemView().homeDirectory,"Desktop")
     }
 }

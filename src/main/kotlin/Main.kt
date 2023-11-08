@@ -26,17 +26,17 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import bean.DeviceInfo
 import bean.createMainNavData
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import page.CurrentAppInfoPage
 import page.FileManager
 import page.PhoneInfoPage
 import page.QuickPage
 import res.defaultBgColor
 import tool.ADBUtil
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import tool.CLUtil
 import tool.FileUtil
-import java.io.File
+import java.net.URLClassLoader
+import java.util.jar.Manifest
 
 fun main() = application {
     FileUtil.releaseAdb()
@@ -45,7 +45,7 @@ fun main() = application {
             FileUtil.cleanCache()
             exitApplication()
         },
-        title = "AndroidAdbTool",
+        title = "AndroidAdbTool(${this::class.java.`package`.implementationVersion})",
         visible = true,
         state = WindowState(size = DpSize(width = 1200.dp, height = 900.dp))
     ) {
@@ -76,7 +76,7 @@ fun App() {
                 0 -> CurrentAppInfoPage(device)
                 1 -> PhoneInfoPage(device)
                 2 -> QuickPage(device)
-                3 -> FileManager(device,ADBUtil.hasRoot(device))
+                3 -> FileManager(device, ADBUtil.hasRoot(device))
             }
         }
     }
@@ -132,32 +132,23 @@ private fun MainNavItem(
 fun ConnectDevices(deviceCallback: (String?) -> Unit) {
     // 拿到已经连接的所有设备
     val devices = remember { mutableStateListOf<DeviceInfo>() }
-
     var refresh by remember { mutableStateOf(0) }
     LaunchedEffect(refresh) {
-
         withContext(Dispatchers.IO) {
             val list = ADBUtil.getDevice()
             withContext(Dispatchers.Main) {
                 devices.addAll(list)
             }
         }
-
     }
 
-
     var showDeviceItem by remember { mutableStateOf(false) }
-
     val size by animateDpAsState(
         targetValue = if (showDeviceItem) 120.dp else 0.dp
     )
     // 箭头旋转动画
     val arrowAnim by animateFloatAsState(if (showDeviceItem) -180f else 0f)
-
     var selectIndexDevice by remember { mutableStateOf(0) }
-
-
-
     Column(modifier = Modifier.padding(horizontal = 12.dp)) {
         val deviceName = if (devices.isNotEmpty()) {
             val firstDevice = devices[selectIndexDevice]
@@ -169,9 +160,7 @@ fun ConnectDevices(deviceCallback: (String?) -> Unit) {
             "连接设备"
         }
         TextButton(
-            {
-                showDeviceItem = !showDeviceItem
-            },
+            { showDeviceItem = !showDeviceItem },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(19.dp),
             border = BorderStroke(1.dp, Color.Black)
@@ -212,7 +201,6 @@ fun ConnectDevices(deviceCallback: (String?) -> Unit) {
             }
         }
 
-
         Button(onClick = {
             devices.clear()
             selectIndexDevice = 0
@@ -221,5 +209,4 @@ fun ConnectDevices(deviceCallback: (String?) -> Unit) {
             Text("刷新Adb Device")
         }
     }
-
 }
