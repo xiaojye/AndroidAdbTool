@@ -15,14 +15,25 @@ import tool.ADBUtil
 @Composable
 fun PhoneInfoPage(deviceId: String) {
     var map by remember { mutableStateOf<Map<String,String>>(mapOf()) }
+    var refreshCount by remember { mutableStateOf(0) }
 
-    LaunchedEffect(deviceId,map){
+    LaunchedEffect(deviceId,refreshCount,map){
         val newMap = ADBUtil.getProp(deviceId)
         newMap["androidId"] = ADBUtil.getAndroidId(deviceId)
         newMap["density"] = ADBUtil.getDensity(deviceId)
         newMap["physicalSize"] = ADBUtil.getPhysicalSize(deviceId)
         newMap["mac"] = ADBUtil.getMac(deviceId)
         newMap["ipv4"] = ADBUtil.getWlan0IP(deviceId,true) ?: ""
+        val batteryInfo = ADBUtil.getBatteryInfo(deviceId)
+        newMap["batteryInfo-statusStr"] = batteryInfo.getStatusStr()
+        newMap["batteryInfo-healthStr"] = batteryInfo.getHealthStr()
+        newMap["batteryInfo-chargingMethod"] = batteryInfo.getChargingMethod()
+        newMap["batteryInfo-present"] = batteryInfo.present.toString()
+        newMap["batteryInfo-level"] = "${batteryInfo.level}/${batteryInfo.scale}"
+        newMap["batteryInfo-voltage"] = batteryInfo.voltage.toString()
+        newMap["batteryInfo-temperature"] = batteryInfo.temperature.toString()
+        newMap["batteryInfo-technology"] = batteryInfo.technology ?: ""
+        newMap["batteryInfo-counter"] = batteryInfo.counter.toString()
         map = newMap
     }
     Column(modifier = Modifier.padding(10.dp).fillMaxWidth().background(Color.White).padding(10.dp)) {
@@ -50,6 +61,16 @@ fun PhoneInfoPage(deviceId: String) {
                 Text("国家代码："+map["gsm.operator.iso-country"])
                 Spacer(modifier = Modifier.height(10.dp))
                 Text("Abi列表："+map["ro.product.cpu.abilist"])
+                Spacer(modifier = Modifier.height(10.dp))
+                Text("电池存在："+map["batteryInfo-present"])
+                Text("电池状态："+map["batteryInfo-statusStr"])
+                Text("电池电量："+map["batteryInfo-level"])
+                Text("电池电压："+map["batteryInfo-voltage"])
+                Text("电池温度："+map["batteryInfo-temperature"])
+                Text("充电方式："+map["batteryInfo-chargingMethod"])
+                Text("电池健康："+map["batteryInfo-healthStr"])
+                Text("充电计数："+map["batteryInfo-counter"])
+                Text("电池技术："+map["batteryInfo-technology"])
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -59,6 +80,12 @@ fun PhoneInfoPage(deviceId: String) {
             }, modifier = Modifier.padding(10.dp)) {
                 Text("断开连接")
             }
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Button(onClick = {
+            refreshCount++
+        }, modifier = Modifier.padding(10.dp).fillMaxWidth()) {
+            Text("刷新数据")
         }
     }
 }

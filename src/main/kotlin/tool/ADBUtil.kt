@@ -4,6 +4,8 @@ import bean.DeviceInfo
 import bean.FileBean
 import java.io.File
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 /**
  * @author erning
@@ -326,6 +328,29 @@ object ADBUtil {
     }
 
     /**
+     * 获取电池信息
+     */
+    fun getBatteryInfo(deviceId: String):BatteryInfo{
+        val command = arrayOf("-s", deviceId, "shell","dumpsys","battery")
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
+        val data = parseResult(result)
+        return BatteryInfo().apply {
+            ac = getLineWithStart("AC",data, strict = false)?.lastOrNull()?.toBoolean() ?: false
+            usb = getLineWithStart("USB",data, strict = false)?.lastOrNull()?.toBoolean() ?: false
+            wireless = getLineWithStart("Wireless",data, strict = false)?.lastOrNull()?.toBoolean() ?: false
+            present = getLineWithStart("present",data, strict = false)?.lastOrNull()?.toBoolean() ?: false
+            status = getLineWithStart("status",data, strict = false)?.lastOrNull()?.toInt() ?: -1
+            health = getLineWithStart("health",data, strict = false)?.lastOrNull()?.toInt() ?: -1
+            level = getLineWithStart("level",data, strict = false)?.lastOrNull()?.toInt() ?: -1
+            scale = getLineWithStart("scale",data, strict = false)?.lastOrNull()?.toInt() ?: -1
+            voltage = getLineWithStart("voltage",data, strict = false)?.lastOrNull()?.toInt() ?: -1
+            temperature = getLineWithStart("temperature",data, strict = false)?.lastOrNull()?.toInt() ?: -1
+            technology = getLineWithStart("technology",data, strict = false)?.lastOrNull()
+            counter = getLineWithStart("Charge",data, strict = false)?.lastOrNull()?.toInt() ?: -1
+        }
+    }
+
+    /**
      * 获取ADB路径
      */
     private fun getAdbPath(): String {
@@ -343,14 +368,21 @@ object ADBUtil {
         return "adb"
     }
 
-    private fun getLineWithStart(start:String,data:Array<Array<String>>,ignoreCase:Boolean = true): Array<String>? {
+    /**
+     * 找到已指定字符串开头的行
+     * @param start 要查找的内容
+     * @param data 所有数据
+     * @param ignoreCase 是否忽略大小写
+     * @param strict 是否严格模式(严格模式下要求第一个单词必须和给定的单词完全相同，否则只要以给定的单词开头即可)
+     */
+    private fun getLineWithStart(start:String,data:Array<Array<String>>,ignoreCase:Boolean = true,strict:Boolean = true): Array<String>? {
         data.forEach { line ->
-            if(ignoreCase){
-                if(start.equals(line.firstOrNull(),true)){
+            if(strict){
+                if(line.firstOrNull()?.equals(start,ignoreCase) == true){
                     return line
                 }
             }else{
-                if(line.firstOrNull() == start){
+                if(line.firstOrNull()?.startsWith(start,ignoreCase) == true){
                     return line
                 }
             }
@@ -384,5 +416,51 @@ object ADBUtil {
 
     enum class RebootType(val type:String){
         SYSTEM(""), RECOVER("recovery"), FASTBOOT("bootloader")
+    }
+
+    class BatteryInfo(){
+        var ac:Boolean = false
+        var usb:Boolean = false
+        var wireless:Boolean = false
+        var present:Boolean = false // 电池是否存在
+        var status:Int = -1 // 电池状态(1:未知;2:充电;3:放电;4:不充电;5:满电)
+        var health:Int = -1 // 电池健康状态(1:未知;2:良好;3:过热;4:死亡;5:过电压;6:未指定故障;7:过冷)
+        var level:Int = -1 // 电池电量
+        var scale:Int = -1 // 电池总电量
+        var voltage:Int = -1 // 电压
+        var temperature:Int = -1 // 电池温度(一般/10)
+        var technology:String? = ""
+        var counter:Int = -1 // 充电计数(一般/1000)
+
+        fun getHealthStr(): String {
+            return when(health){
+                2 -> "良好"
+                3 -> "过热"
+                4 -> "死亡"
+                5 -> "过电压"
+                6 -> "未指定故障"
+                7 -> "过冷"
+                else -> "未知"
+            }
+        }
+
+        fun getStatusStr(): String {
+            return when(status){
+                2 -> "充电"
+                3 -> "放电"
+                4 -> "不充电"
+                5 -> "满电"
+                else -> "未知"
+            }
+        }
+
+        fun getChargingMethod(): String {
+            return when{
+                ac -> "充电器"
+                usb -> "USB"
+                wireless -> "无线"
+                else -> "未知"
+            }
+        }
     }
 }
