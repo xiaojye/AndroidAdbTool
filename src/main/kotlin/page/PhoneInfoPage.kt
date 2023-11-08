@@ -9,6 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import tool.ADBUtil
 
 
@@ -18,23 +20,27 @@ fun PhoneInfoPage(deviceId: String) {
     var refreshCount by remember { mutableStateOf(0) }
 
     LaunchedEffect(deviceId,refreshCount,map){
-        val newMap = ADBUtil.getProp(deviceId)
-        newMap["androidId"] = ADBUtil.getAndroidId(deviceId)
-        newMap["density"] = ADBUtil.getDensity(deviceId)
-        newMap["physicalSize"] = ADBUtil.getPhysicalSize(deviceId)
-        newMap["mac"] = ADBUtil.getMac(deviceId)
-        newMap["ipv4"] = ADBUtil.getWlan0IP(deviceId,true) ?: ""
-        val batteryInfo = ADBUtil.getBatteryInfo(deviceId)
-        newMap["batteryInfo-statusStr"] = batteryInfo.getStatusStr()
-        newMap["batteryInfo-healthStr"] = batteryInfo.getHealthStr()
-        newMap["batteryInfo-chargingMethod"] = batteryInfo.getChargingMethod()
-        newMap["batteryInfo-present"] = batteryInfo.present.toString()
-        newMap["batteryInfo-level"] = "${batteryInfo.level}/${batteryInfo.scale}"
-        newMap["batteryInfo-voltage"] = batteryInfo.voltage.toString()
-        newMap["batteryInfo-temperature"] = batteryInfo.temperature.toString()
-        newMap["batteryInfo-technology"] = batteryInfo.technology ?: ""
-        newMap["batteryInfo-counter"] = batteryInfo.counter.toString()
-        map = newMap
+        withContext(Dispatchers.IO) {
+            val newMap = ADBUtil.getProp(deviceId)
+            newMap["androidId"] = ADBUtil.getAndroidId(deviceId)
+            newMap["density"] = ADBUtil.getDensity(deviceId)
+            newMap["physicalSize"] = ADBUtil.getPhysicalSize(deviceId)
+            newMap["mac"] = ADBUtil.getMac(deviceId)
+            newMap["ipv4"] = ADBUtil.getWlan0IP(deviceId, true) ?: ""
+            val batteryInfo = ADBUtil.getBatteryInfo(deviceId)
+            newMap["batteryInfo-statusStr"] = batteryInfo.getStatusStr()
+            newMap["batteryInfo-healthStr"] = batteryInfo.getHealthStr()
+            newMap["batteryInfo-chargingMethod"] = batteryInfo.getChargingMethod()
+            newMap["batteryInfo-present"] = batteryInfo.present.toString()
+            newMap["batteryInfo-level"] = "${batteryInfo.level}/${batteryInfo.scale}"
+            newMap["batteryInfo-voltage"] = batteryInfo.voltage.toString()
+            newMap["batteryInfo-temperature"] = batteryInfo.temperature.toString()
+            newMap["batteryInfo-technology"] = batteryInfo.technology ?: ""
+            newMap["batteryInfo-counter"] = batteryInfo.counter.toString()
+            withContext(Dispatchers.Main){
+                map = newMap
+            }
+        }
     }
     Column(modifier = Modifier.padding(10.dp).fillMaxWidth().background(Color.White).padding(10.dp)) {
         SelectionContainer {

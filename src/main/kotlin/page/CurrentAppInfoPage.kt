@@ -9,6 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.unit.dp
 import dialog.MessageDialog
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import tool.ADBUtil
 import java.awt.FileDialog
 
@@ -23,9 +25,16 @@ fun CurrentAppInfoPage(deviceId: String) {
     var currentApkPath by remember { mutableStateOf("") }
 
     LaunchedEffect(refreshCount,deviceId){
-        currentActivity = ADBUtil.getCurrentActivity(deviceId)
-        currentPackageName = currentActivity.split("/").getOrNull(0) ?: ""
-        currentApkPath = ADBUtil.getApkPath(deviceId,currentPackageName) ?: ""
+        withContext(Dispatchers.IO){
+            val mCurrentActivity = ADBUtil.getCurrentActivity(deviceId)
+            val mCurrentPackageName = mCurrentActivity.split("/").getOrNull(0) ?: ""
+            val mCurrentApkPath = ADBUtil.getApkPath(deviceId,mCurrentPackageName) ?: ""
+            withContext(Dispatchers.Main){
+                currentActivity = mCurrentActivity
+                currentPackageName = mCurrentPackageName
+                currentApkPath = mCurrentApkPath
+            }
+        }
     }
     Column {
         Surface(modifier = Modifier.padding(10.dp).fillMaxWidth()) {
