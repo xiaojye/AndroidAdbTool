@@ -162,6 +162,7 @@ object ADBUtil {
             setPermission(deviceId,"777","/data/local/tmp/${deviceFileName}",true)
             val command2 = arrayOf("-s", deviceId, "pull", "/data/local/tmp/${deviceFileName}", localFile)
             CLUtil.execute(arrayOf(ADB_PATH, *command2))
+            deleteFile(deviceId,"/data/local/tmp/${deviceFileName}",true)
         }
     }
 
@@ -169,14 +170,16 @@ object ADBUtil {
      * 上传文件
      */
     fun push(deviceId: String, localFile: String, deviceDir: String, su: Boolean) {
-        val command = arrayOf("-s", deviceId, "push", localFile, deviceDir)
+        val fileName = localFile.split(File.separator).last()
+        val newFileName = "${System.currentTimeMillis()}"
+        val command = arrayOf("-s", deviceId, "push", localFile, deviceDir+newFileName)
         val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
+        moveFile(deviceId,deviceDir+newFileName,deviceDir+fileName.last(),su)
         if (su && result.contains("Permission denied",true)){
             // 没有权限
             val newDeviceDir = "/data/local/tmp/"
-            CLUtil.execute(arrayOf(ADB_PATH, "-s", deviceId, "push", localFile, newDeviceDir))
-            val newFile = newDeviceDir+localFile.split(File.separator).last()
-            copyFile(deviceId,newFile,deviceDir,true)
+            CLUtil.execute(arrayOf(ADB_PATH, "-s", deviceId, "push", localFile, newDeviceDir+newFileName))
+            moveFile(deviceId,newDeviceDir+newFileName,deviceDir+fileName,true)
         }
     }
 
@@ -197,9 +200,9 @@ object ADBUtil {
     }
 
     /**
-     * 重命文件
+     * 移动文件
      */
-    fun rename(deviceId: String, oldFile: String, newFile: String, su: Boolean) {
+    fun moveFile(deviceId: String, oldFile: String, newFile: String, su: Boolean) {
         val command = arrayOf("-s", deviceId, "shell",if (su) "su -c" else "","mv", oldFile,newFile)
         CLUtil.execute(arrayOf(ADB_PATH, *command))
     }

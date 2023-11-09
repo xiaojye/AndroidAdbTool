@@ -7,11 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.materialIcon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -157,7 +154,7 @@ fun FileManager(deviceId: String,root:Boolean = false) {
             }
             val newFile = "${showRenameDialog?.parent}${it}"
             println("${file}重命名为${newFile}")
-            ADBUtil.rename(deviceId,file,newFile,root)
+            ADBUtil.moveFile(deviceId,file,newFile,root)
             showRenameDialog = null
             refresh++
         })

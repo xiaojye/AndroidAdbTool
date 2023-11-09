@@ -35,7 +35,7 @@ compose.desktop {
             packageName = "AndroidAdbTool"
             packageVersion = versionName
             description = "AndroidAdbTool"
-            vendor = "叫我二宁大人！"
+            vendor = "Erning"
             macOS {
                 iconFile.set(project.file("logo_mac.icns"))
             }
