@@ -46,7 +46,7 @@ fun FileManager(deviceId: String,root:Boolean = false) {
         withContext(Dispatchers.IO) {
             val list = ADBUtil.fileList(deviceId,foldName,root)
             list.sortBy { !it.fold }
-            withContext(Dispatchers.Main) {
+            withContext(Dispatchers.Default) {
                 fileList.clear()
                 fileList.addAll(list)
             }
@@ -167,10 +167,15 @@ fun FileManager(deviceId: String,root:Boolean = false) {
 private fun pullFile(deviceId: String,source:FileBean,open:Boolean,root:Boolean){
     val fileDialog = FileDialog(ComposeWindow(),"导出文件", FileDialog.SAVE)
     fileDialog.isMultipleMode = false
+    fileDialog.file = source.name
     fileDialog.isVisible = true
     val directory = fileDialog.directory?.replace("\n","")?.replace("\r","")
+    var file = fileDialog.file?.replace("\n","")?.replace("\r","")
+    if(file.isNullOrBlank()){
+        file = source.name
+    }
     if (directory != null) {
-        val path = "$directory${source.name}"
+        val path = "$directory${file}"
         ADBUtil.pull(deviceId,"${source.parent}${source.name}",path,root)
         if (open){
             FileUtil.openFileWithDefault(File(path))

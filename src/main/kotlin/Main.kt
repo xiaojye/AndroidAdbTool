@@ -36,11 +36,12 @@ import page.QuickPage
 import res.defaultBgColor
 import tool.ADBUtil
 import tool.FileUtil
-import java.net.URLClassLoader
-import java.util.jar.Manifest
+import java.awt.Dimension
+import javax.swing.UIManager
 
 fun main() = application {
     FileUtil.releaseAdb()
+    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
     Window(
         onCloseRequest = {
             FileUtil.cleanCache()
@@ -53,6 +54,7 @@ fun main() = application {
             position = WindowPosition(Alignment.Center)
         )
     ) {
+        window.minimumSize = Dimension(680, 400)
         App()
     }
 }
@@ -140,7 +142,7 @@ fun ConnectDevices(deviceCallback: (String?) -> Unit) {
     LaunchedEffect(refresh) {
         withContext(Dispatchers.IO) {
             val list = ADBUtil.getDevice()
-            withContext(Dispatchers.Main) {
+            withContext(Dispatchers.Default) {
                 devices.addAll(list)
             }
         }

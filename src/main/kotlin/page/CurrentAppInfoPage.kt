@@ -1,6 +1,9 @@
 package page
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -16,6 +19,7 @@ import java.awt.FileDialog
 
 @Composable
 fun CurrentAppInfoPage(deviceId: String) {
+    val scrollState = rememberScrollState()
     var refreshCount by remember { mutableStateOf(0) }
     var showUnInstallDialog by remember { mutableStateOf(false) }
     var showCleanDataDialog by remember { mutableStateOf(false) }
@@ -24,40 +28,42 @@ fun CurrentAppInfoPage(deviceId: String) {
     var currentPackageName by remember { mutableStateOf("") }
     var currentApkPath by remember { mutableStateOf("") }
 
-    LaunchedEffect(refreshCount,deviceId){
-        withContext(Dispatchers.IO){
+    LaunchedEffect(refreshCount, deviceId) {
+        withContext(Dispatchers.IO) {
             val mCurrentActivity = ADBUtil.getCurrentActivity(deviceId)
             val mCurrentPackageName = mCurrentActivity.split("/").getOrNull(0) ?: ""
-            val mCurrentApkPath = ADBUtil.getApkPath(deviceId,mCurrentPackageName) ?: ""
-            withContext(Dispatchers.Main){
+            val mCurrentApkPath = ADBUtil.getApkPath(deviceId, mCurrentPackageName) ?: ""
+            withContext(Dispatchers.Default) {
                 currentActivity = mCurrentActivity
                 currentPackageName = mCurrentPackageName
                 currentApkPath = mCurrentApkPath
             }
         }
     }
-    Column {
+    Column(modifier = Modifier.verticalScroll(scrollState)) {
         Surface(modifier = Modifier.padding(10.dp).fillMaxWidth()) {
-            Column(modifier = Modifier.padding(10.dp)) {
-                Row {
-                    Text("当前应用包名：")
-                    Text(currentPackageName)
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Row {
-                    Text("当前页面：")
-                    Text(currentActivity)
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Row {
-                    Text("当前应用安装路径：")
-                    Text(currentApkPath)
+            SelectionContainer {
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Row {
+                        Text("当前应用包名：")
+                        Text(currentPackageName)
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row {
+                        Text("当前页面：")
+                        Text(currentActivity)
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row {
+                        Text("当前应用安装路径：")
+                        Text(currentApkPath)
+                    }
                 }
             }
         }
         Row {
             Button(onClick = {
-                ADBUtil.stopApplication(deviceId,currentPackageName)
+                ADBUtil.stopApplication(deviceId, currentPackageName)
             }, modifier = Modifier.padding(10.dp)) {
                 Text("停止运行")
             }
@@ -73,27 +79,20 @@ fun CurrentAppInfoPage(deviceId: String) {
             }
             Button(onClick = {
                 val fileName = "${currentPackageName}.apk"
-                val fileDialog = FileDialog(ComposeWindow(),"导出安装包",FileDialog.SAVE)
+                val fileDialog = FileDialog(ComposeWindow(), "导出安装包", FileDialog.SAVE)
                 fileDialog.isMultipleMode = false
-                fileDialog.isVisible = true
                 fileDialog.file = fileName
-                val directory = fileDialog.directory?.replace("\n","")?.replace("\r","")
-                var file = fileDialog.file?.replace("\n","")?.replace("\r","")
-                if(file.isNullOrBlank()){
+                fileDialog.isVisible = true
+                val directory = fileDialog.directory?.replace("\n", "")?.replace("\r", "")
+                var file = fileDialog.file?.replace("\n", "")?.replace("\r", "")
+                if (file.isNullOrBlank()) {
                     file = fileName
                 }
                 if (directory != null) {
                     val path = "$directory$file"
                     println(path)
-                    ADBUtil.pull(deviceId,currentApkPath,path)
+                    ADBUtil.pull(deviceId, currentApkPath, path)
                 }
-
-                // JFileChooser().apply {
-                //     fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
-                //     showOpenDialog(ComposeWindow())
-                //     val path = selectedFile?.absolutePath ?: ""
-                //     println(path)
-                // }
             }, modifier = Modifier.padding(10.dp)) {
                 Text("导出安装包")
             }
@@ -105,21 +104,21 @@ fun CurrentAppInfoPage(deviceId: String) {
         }
     }
 
-    if(showUnInstallDialog) {
+    if (showUnInstallDialog) {
         MessageDialog("注意", "确定要卸载吗？", {
             showUnInstallDialog = false
         }, {
             showUnInstallDialog = false
-            ADBUtil.unInstall(deviceId,currentPackageName)
+            ADBUtil.unInstall(deviceId, currentPackageName)
             refreshCount++
         })
     }
-    if(showCleanDataDialog) {
+    if (showCleanDataDialog) {
         MessageDialog("注意", "确定要清空数据吗？", {
             showCleanDataDialog = false
         }, {
             showCleanDataDialog = false
-            ADBUtil.cleanAppData(deviceId,currentPackageName)
+            ADBUtil.cleanAppData(deviceId, currentPackageName)
             refreshCount++
         })
     }

@@ -2,7 +2,9 @@ package page
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -18,6 +20,7 @@ import tool.ADBUtil
 fun PhoneInfoPage(deviceId: String) {
     var map by remember { mutableStateOf<Map<String,String>>(mapOf()) }
     var refreshCount by remember { mutableStateOf(0) }
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(deviceId,refreshCount,map){
         withContext(Dispatchers.IO) {
@@ -37,12 +40,12 @@ fun PhoneInfoPage(deviceId: String) {
             newMap["batteryInfo-temperature"] = batteryInfo.temperature.toString()
             newMap["batteryInfo-technology"] = batteryInfo.technology ?: ""
             newMap["batteryInfo-counter"] = batteryInfo.counter.toString()
-            withContext(Dispatchers.Main){
+            withContext(Dispatchers.Default){
                 map = newMap
             }
         }
     }
-    Column(modifier = Modifier.padding(10.dp).fillMaxWidth().background(Color.White).padding(10.dp)) {
+    Column(modifier = Modifier.padding(10.dp).fillMaxWidth().background(Color.White).padding(10.dp).verticalScroll(scrollState)) {
         SelectionContainer {
             Column {
                 Text("生产商："+map["ro.product.manufacturer"])
