@@ -49,9 +49,7 @@ fun main() = application {
         title = "AndroidAdbTool(${this::class.java.`package`.implementationVersion})",
         visible = true,
         state = WindowState(
-            // size = DpSize(width = 1200.dp, height = 900.dp),
-            size = DpSize(width = 800.dp, height = 800.dp),
-            // size = DpSize(width = 675.dp, height = 800.dp), // 最小
+            size = DpSize(width = 1200.dp, height = 900.dp),
             position = WindowPosition(Alignment.Center)
         )
     ) {

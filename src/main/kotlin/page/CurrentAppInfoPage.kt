@@ -85,7 +85,7 @@ fun CurrentAppInfoPage(deviceId: String) {
                 if (directory != null) {
                     val path = "$directory$file"
                     println(path)
-                    ADBUtil.exportFile(deviceId,currentApkPath,path)
+                    ADBUtil.pull(deviceId,currentApkPath,path)
                 }
 
                 // JFileChooser().apply {

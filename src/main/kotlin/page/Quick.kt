@@ -64,7 +64,7 @@ private fun CommonFunction(device: String) {
             QuickItem("icon/ic_cut_screen.svg", "截图保存到桌面", modifier = Modifier.weight(1f).clickable {
                 val deviceFile = ADBUtil.screenshot(device)
                 val localFile = File(FileUtil.getDesktopFile(),deviceFile.split("/").last()).absolutePath
-                ADBUtil.exportFile(device,deviceFile,localFile)
+                ADBUtil.pull(device,deviceFile,localFile)
                 ADBUtil.deleteFile(device,deviceFile)
             })
             QuickItem(modifier = Modifier.weight(1f))
