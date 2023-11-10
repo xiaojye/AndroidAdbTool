@@ -1,8 +1,10 @@
 package tool
 
+import UnicodeCharConvert
 import bean.DeviceInfo
 import bean.FileBean
 import java.io.File
+import java.net.URLEncoder
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -153,14 +155,14 @@ object ADBUtil {
      * 导出文件
      */
     fun pull(deviceId: String, deviceFile: String, localFile: String, su:Boolean = false) {
-        val command = arrayOf("-s", deviceId, "pull", deviceFile, localFile)
+        val command = arrayOf("-s", deviceId, "pull", deviceFile, UnicodeCharConvert.string2Unicode(localFile))
         val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
         if (su && result.contains("Permission denied",true)){
             // 没有权限
             val deviceFileName = deviceFile.split(File.separator).last()
             copyFile(deviceId,deviceFile,"/data/local/tmp/${deviceFileName}",true)
             setPermission(deviceId,"777","/data/local/tmp/${deviceFileName}",true)
-            val command2 = arrayOf("-s", deviceId, "pull", "/data/local/tmp/${deviceFileName}", localFile)
+            val command2 = arrayOf("-s", deviceId, "pull", "/data/local/tmp/${deviceFileName}", UnicodeCharConvert.string2Unicode(localFile))
             CLUtil.execute(arrayOf(ADB_PATH, *command2))
             deleteFile(deviceId,"/data/local/tmp/${deviceFileName}",true)
         }
@@ -174,7 +176,7 @@ object ADBUtil {
         val newFileName = "${System.currentTimeMillis()}"
         val command = arrayOf("-s", deviceId, "push", localFile, deviceDir+newFileName)
         val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
-        moveFile(deviceId,deviceDir+newFileName,deviceDir+fileName.last(),su)
+        moveFile(deviceId,deviceDir+newFileName,deviceDir+fileName,su)
         if (su && result.contains("Permission denied",true)){
             // 没有权限
             val newDeviceDir = "/data/local/tmp/"

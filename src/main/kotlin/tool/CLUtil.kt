@@ -11,6 +11,7 @@ import java.io.InputStreamReader
  */
 object CLUtil {
     fun execute(command: String?): String {
+        println("执行命令：\n${command}")
         val process: Process
         val stringBuilder = StringBuilder()
         try {
@@ -32,6 +33,7 @@ object CLUtil {
     }
 
     fun execute(command: Array<String>?): String {
+        println("执行命令：\n${command?.joinToString(" ") { it }}")
         val process: Process
         val stringBuilder = StringBuilder()
         try {
@@ -48,7 +50,7 @@ object CLUtil {
         } catch (e: IOException) {
             e.printStackTrace()
         }
-        println("执行命令：\n${command?.joinToString(" ") { it }}\n返回结果：\n${stringBuilder}")
+        println("返回结果：\n${stringBuilder}")
         return stringBuilder.toString()
     }
 }

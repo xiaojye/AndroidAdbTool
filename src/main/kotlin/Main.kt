@@ -63,21 +63,16 @@ fun main() = application {
 @Preview
 fun App() {
     var selectItem by remember { mutableStateOf(0) }
-    // 当前选中的设备id
     var device by remember { mutableStateOf("") }
+
     Scaffold(bottomBar = {
-        MainNav(modifier = Modifier.width(200.dp), {
-            selectItem = it
-        }) {
+        MainNav(modifier = Modifier.width(200.dp), { selectItem = it }) {
             if (!it.isNullOrEmpty()) {
                 device = it
             }
         }
     }) {
-        // NavigationRail 宽度默认72.dp
-        Box(
-            modifier = Modifier.background(defaultBgColor).fillMaxHeight().fillMaxWidth().padding(start = 200.dp)
-        ) {
+        Box(modifier = Modifier.background(defaultBgColor).fillMaxHeight().fillMaxWidth().padding(start = 200.dp)) {
             when (selectItem) {
                 0 -> CurrentAppInfoPage(device)
                 1 -> PhoneInfoPage(device)
