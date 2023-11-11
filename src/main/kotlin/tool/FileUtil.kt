@@ -76,7 +76,11 @@ object FileUtil {
     }
 
     fun getCacheDir(): File {
-        val cacheDir = File(getSelfPath(),"runtimeCache")
+        val cacheDir = if(PlatformUtil.isWindows()){
+            File(getUserHomeFile(),"AppData${File.separator}Local${File.separator}AndroidAdbTool${File.separator}runtimeCache")
+        }else{
+            File(getSelfPath(),"runtimeCache")
+        }
         if(cacheDir.isFile){
             cacheDir.delete()
         }
