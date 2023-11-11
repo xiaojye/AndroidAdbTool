@@ -40,6 +40,9 @@ compose.desktop {
                 iconFile.set(project.file("logo_mac.icns"))
             }
             windows {
+                upgradeUuid = "2D79971E-C867-95ED-0859-B109F3EC97CC"
+                console = true
+                shortcut = true
                 iconFile.set(project.file("logo_windows.ico"))
             }
             linux {

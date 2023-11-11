@@ -40,28 +40,35 @@ object FileUtil {
     }
 
     fun releaseAdb(){
-        val adbDir = File(getSelfPath(),"runtimeAdbFiles")
+        val isWindows = PlatformUtil.isWindows()
+        val adbDir = if (isWindows){
+            File(getUserHomeFile(),"AppData${File.separator}Local${File.separator}AndroidAdbTool${File.separator}runtimeAdbFiles")
+        }else{
+            File(getSelfPath(),"runtimeAdbFiles")
+        }
         if(adbDir.isFile){
             adbDir.delete()
         }
         if (!adbDir.exists()){
             adbDir.mkdirs()
             adbDir.setWritable(true,false)
-            if (System.getProperties().getProperty("os.name").lowercase(Locale.getDefault()).startsWith("windows")){
-                releaseFile(adbDir,"adb.exe","bin"+File.separator+"adb.exe")
-                releaseFile(adbDir,"AdbWinApi.dll","bin"+File.separator+"AdbWinApi.dll")
-                releaseFile(adbDir,"AdbWinUsbApi.dll","bin"+File.separator+"AdbWinUsbApi.dll")
-            }else{
-                releaseFile(adbDir,"adb","bin"+File.separator+"adb")
-            }
+        }
+        if (isWindows){
+            releaseFile(adbDir,"adb.exe","bin"+File.separator+"adb.exe")
+            releaseFile(adbDir,"AdbWinApi.dll","bin"+File.separator+"AdbWinApi.dll")
+            releaseFile(adbDir,"AdbWinUsbApi.dll","bin"+File.separator+"AdbWinUsbApi.dll")
+        }else{
+            releaseFile(adbDir,"adb","bin"+File.separator+"adb")
         }
     }
 
     private fun releaseFile(dir:File,fileName:String,packageFile:String){
+        println("释放文件：${packageFile}到${dir}${File.separator}${fileName}")
         val file = File(dir,fileName)
         if (!file.exists()){
             ClassLoader.getSystemResourceAsStream(packageFile)?.use {
                 file.createNewFile()
+                file.setWritable(true,false)
                 file.writeBytes(it.readAllBytes())
             }
             file.setExecutable(true,false)
@@ -107,6 +114,15 @@ object FileUtil {
     }
 
     fun getDesktopFile(): File {
-        return File(FileSystemView.getFileSystemView().homeDirectory,"Desktop")
+        return File(getUserHomeFile(),"Desktop")
+    }
+
+    fun getUserHomeFile(): File? {
+        val home = FileSystemView.getFileSystemView().homeDirectory
+        return if(PlatformUtil.isWindows() && home.name.equals("Desktop",true)){
+            File(home.absolutePath.removeSuffix(File.separator+"Desktop"))
+        }else{
+            home
+        }
     }
 }

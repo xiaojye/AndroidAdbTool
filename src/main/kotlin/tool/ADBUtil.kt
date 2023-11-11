@@ -6,6 +6,7 @@ import bean.FileBean
 import java.io.File
 import java.net.URLEncoder
 import java.util.*
+import javax.swing.filechooser.FileSystemView
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -15,7 +16,7 @@ import kotlin.collections.HashMap
  * https://blog.csdn.net/zx54633089/article/details/115346785
  */
 object ADBUtil {
-    private var ADB_PATH = getAdbPath()
+    var ADB_PATH = getAdbPath()
 
     /**
      * 检查有没有ADB
@@ -416,8 +417,13 @@ object ADBUtil {
      * 获取ADB路径
      */
     private fun getAdbPath(): String {
-        val adbDir = File(FileUtil.getSelfPath(),"runtimeAdbFiles")
-        val adbFile = if (System.getProperties().getProperty("os.name").lowercase(Locale.getDefault()).startsWith("windows")) {
+        val isWindows = PlatformUtil.isWindows()
+        val adbDir = if (isWindows){
+            File(FileUtil.getUserHomeFile(),"AppData${File.separator}Local${File.separator}AndroidAdbTool${File.separator}runtimeAdbFiles")
+        }else{
+            File(FileUtil.getSelfPath(),"runtimeAdbFiles")
+        }
+        val adbFile = if (isWindows) {
             File(adbDir,"adb.exe")
         } else {
             File(adbDir,"adb")
