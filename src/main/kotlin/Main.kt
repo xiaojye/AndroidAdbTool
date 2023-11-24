@@ -27,12 +27,8 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import bean.DeviceInfo
 import bean.createMainNavData
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import page.CurrentAppInfoPage
-import page.FileManager
-import page.PhoneInfoPage
-import page.QuickPage
+import config.DeviceRecordUtil
+import page.*
 import res.defaultBgColor
 import tool.ADBUtil
 import tool.FileUtil
@@ -42,6 +38,7 @@ import javax.swing.UIManager
 fun main() = application {
     FileUtil.releaseAdb()
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+    DeviceRecordUtil.readDeviceList()
     Window(
         onCloseRequest = {
             FileUtil.cleanCache()
@@ -62,11 +59,18 @@ fun main() = application {
 @Composable
 @Preview
 fun App() {
+    val connectedDevicesList = remember { mutableStateListOf<DeviceInfo>() }
+    val refreshConnectedDevicesList:()->Unit = {
+        connectedDevicesList.clear()
+        connectedDevicesList.addAll(ADBUtil.getDevice())
+        DeviceRecordUtil.saveAll(connectedDevicesList)
+    }
+
     var selectItem by remember { mutableStateOf(0) }
     var device by remember { mutableStateOf("") }
 
     Scaffold(bottomBar = {
-        MainNav(modifier = Modifier.width(200.dp), { selectItem = it }) {
+        MainNav(modifier = Modifier.width(200.dp),refreshConnectedDevicesList,connectedDevicesList, { selectItem = it }) {
             if (!it.isNullOrEmpty()) {
                 device = it
             }
@@ -75,20 +79,21 @@ fun App() {
         Box(modifier = Modifier.background(defaultBgColor).fillMaxHeight().fillMaxWidth().padding(start = 200.dp)) {
             when (selectItem) {
                 0 -> CurrentAppInfoPage(device)
-                1 -> PhoneInfoPage(device)
+                1 -> PhoneInfoPage(device,refreshConnectedDevicesList)
                 2 -> QuickPage(device)
                 3 -> FileManager(device, ADBUtil.hasRoot(device))
+                4 -> DeviceRecordPage(refreshConnectedDevicesList,connectedDevicesList)
             }
         }
     }
 }
 
 @Composable
-private fun MainNav(modifier: Modifier, onSelectItem: (Int) -> Unit, deviceId: (String?) -> Unit) {
+private fun MainNav(modifier: Modifier,refreshConnectedDevicesList:()->Unit,connectedDevicesList:MutableList<DeviceInfo>, onSelectItem: (Int) -> Unit, deviceId: (String?) -> Unit) {
     var navigationIndex by remember { mutableStateOf(0) }
     NavigationRail(modifier, elevation = 0.dp, header = {
         Spacer(modifier = Modifier.height(12.dp))
-        ConnectDevices(deviceId)
+        ConnectDevices(refreshConnectedDevicesList,connectedDevicesList,deviceId)
     }) {
         createMainNavData().forEachIndexed { index, mainNavBean ->
             MainNavItem(navigationIndex, index, mainNavBean.svgName, mainNavBean.labelText) {
@@ -106,13 +111,12 @@ private fun MainNav(modifier: Modifier, onSelectItem: (Int) -> Unit, deviceId: (
  * @param mePosition 自己的position
  */
 @Composable
-private fun MainNavItem(
-    selectedPosition: Int, mePosition: Int, svgPath: String, labelText: String, onClick: (Int) -> Unit
-) {
+private fun MainNavItem(selectedPosition: Int, mePosition: Int, svgPath: String, labelText: String, onClick: (Int) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().clickable {
             onClick.invoke(mePosition)
-        }.padding(12.dp), verticalAlignment = Alignment.CenterVertically
+        }.padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
             painterResource(svgPath), "", modifier = Modifier.width(24.dp).height(24.dp)
@@ -130,17 +134,11 @@ private fun MainNavItem(
  * 连接设备widget
  */
 @Composable
-fun ConnectDevices(deviceCallback: (String?) -> Unit) {
+fun ConnectDevices(refreshConnectedDevicesList:()->Unit,connectedDevicesList:MutableList<DeviceInfo>,deviceCallback: (String?) -> Unit) {
     // 拿到已经连接的所有设备
-    val devices = remember { mutableStateListOf<DeviceInfo>() }
     var refresh by remember { mutableStateOf(0) }
     LaunchedEffect(refresh) {
-        withContext(Dispatchers.IO) {
-            val list = ADBUtil.getDevice()
-            withContext(Dispatchers.Default) {
-                devices.addAll(list)
-            }
-        }
+        refreshConnectedDevicesList()
     }
 
     var showDeviceItem by remember { mutableStateOf(false) }
@@ -151,8 +149,8 @@ fun ConnectDevices(deviceCallback: (String?) -> Unit) {
     val arrowAnim by animateFloatAsState(if (showDeviceItem) -180f else 0f)
     var selectIndexDevice by remember { mutableStateOf(0) }
     Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-        val deviceName = if (devices.isNotEmpty()) {
-            val firstDevice = devices[selectIndexDevice]
+        val deviceName = if (connectedDevicesList.isNotEmpty()) {
+            val firstDevice = connectedDevicesList[selectIndexDevice]
             // 获取设备品牌
             deviceCallback.invoke(firstDevice.device)
             "${firstDevice.deviceName}\n${firstDevice.deviceModel}"
@@ -177,8 +175,8 @@ fun ConnectDevices(deviceCallback: (String?) -> Unit) {
         Spacer(modifier = Modifier.height(12.dp))
         AnimatedVisibility(size != 0.dp) {
             LazyColumn {
-                items(devices.size) {
-                    val device = devices[it]
+                items(connectedDevicesList.size) {
+                    val device = connectedDevicesList[it]
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable {
                             selectIndexDevice = it
@@ -203,7 +201,7 @@ fun ConnectDevices(deviceCallback: (String?) -> Unit) {
         }
 
         Button(onClick = {
-            devices.clear()
+            connectedDevicesList.clear()
             selectIndexDevice = 0
             refresh++
         }, modifier = Modifier.fillMaxWidth()) {

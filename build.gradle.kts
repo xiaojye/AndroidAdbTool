@@ -20,6 +20,7 @@ repositories {
 // https://jetpackcompose.cn/docs/resources
 dependencies {
     implementation(compose.desktop.currentOs)
+    implementation("com.alibaba:fastjson:2.0.28")
 }
 
 tasks.withType<KotlinCompile> {

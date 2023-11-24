@@ -45,6 +45,7 @@ object ADBUtil {
                 val name = arr.getOrNull(4)?.split(":")?.getOrNull(1) ?: ""
                 val device = DeviceInfo(name,model,id)
                 device.offline = offline
+                device.ip = getWlan0IP(id)
                 if(!offline) {
                     list.add(device)
                 }

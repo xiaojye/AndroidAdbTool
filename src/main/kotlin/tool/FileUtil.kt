@@ -129,4 +129,26 @@ object FileUtil {
             home
         }
     }
+
+    fun getConfigFile(fileName:String): File {
+        val isWindows = PlatformUtil.isWindows()
+        val dir = if (isWindows){
+            File(getUserHomeFile(),"AppData${File.separator}Local${File.separator}AndroidAdbTool${File.separator}")
+        }else{
+            File(getSelfPath())
+        }
+        if(dir.isFile){
+            dir.delete()
+        }
+        if (!dir.exists()){
+            dir.mkdirs()
+            dir.setWritable(true,false)
+        }
+        val configFile = File(dir,fileName)
+        if (configFile.isDirectory){
+            configFile.deleteRecursively()
+        }
+        configFile.createNewFile()
+        return configFile
+    }
 }

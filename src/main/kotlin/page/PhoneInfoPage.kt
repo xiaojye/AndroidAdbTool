@@ -17,7 +17,7 @@ import tool.ADBUtil
 
 
 @Composable
-fun PhoneInfoPage(deviceId: String) {
+fun PhoneInfoPage(deviceId: String,refreshConnectedDevicesList:()->Unit) {
     var map by remember { mutableStateOf<Map<String,String>>(mapOf()) }
     var refreshCount by remember { mutableStateOf(0) }
     val scrollState = rememberScrollState()
@@ -86,6 +86,7 @@ fun PhoneInfoPage(deviceId: String) {
         Row {
             Button(onClick = {
                 ADBUtil.disconnectDevice(deviceId)
+                refreshConnectedDevicesList()
             }, modifier = Modifier.padding(10.dp)) {
                 Text("断开连接")
             }
