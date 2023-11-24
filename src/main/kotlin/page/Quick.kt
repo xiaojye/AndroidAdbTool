@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import bean.DeviceInfo
 import dialog.InputDialog
 import res.randomColor
 import tool.ADBUtil
@@ -28,7 +29,7 @@ import java.io.File
  * 快捷功能
  */
 @Composable
-fun QuickPage(device: String) {
+fun QuickPage(device: DeviceInfo) {
     LazyColumn(modifier = Modifier.fillMaxHeight().padding(horizontal = 10.dp, vertical = 10.dp).fillMaxWidth()) {
         // 前后加个间距
         item {
@@ -46,7 +47,7 @@ fun QuickPage(device: String) {
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun CommonFunction(device: String) {
+private fun CommonFunction(device: DeviceInfo) {
     var showInputTextDialog by remember { mutableStateOf(false) }
 
     BaseQuick("常用功能", color = Color(255, 152, 0)) {
@@ -58,10 +59,10 @@ private fun CommonFunction(device: String) {
                 showInputTextDialog = true
             })
             QuickItem("icon/ic_cut_screen.svg", "截图保存到桌面", modifier = Modifier.clickable {
-                val deviceFile = ADBUtil.screenshot(device)
+                val deviceFile = ADBUtil.screenshot(device.device)
                 val localFile = File(FileUtil.getDesktopFile(),deviceFile.split("/").last()).absolutePath
-                ADBUtil.pull(device,deviceFile,localFile)
-                ADBUtil.deleteFile(device,deviceFile)
+                ADBUtil.pull(device.device,deviceFile,localFile)
+                ADBUtil.deleteFile(device.device,deviceFile)
             })
         }
     }
@@ -72,7 +73,7 @@ private fun CommonFunction(device: String) {
         }, {
             showInputTextDialog = false
             it?.let {
-                ADBUtil.inputText(device,it)
+                ADBUtil.inputText(device.device,it)
             }
         })
     }
@@ -83,12 +84,12 @@ private fun CommonFunction(device: String) {
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AboutSystem(device: String) {
+private fun AboutSystem(device: DeviceInfo) {
     BaseQuick("系统相关", color = Color(255, 193, 7)) {
         FlowRow() {
-            QuickItem("icon/ic_reboot.svg", "重启手机", modifier = Modifier.clickable { ADBUtil.reboot(device,ADBUtil.RebootType.SYSTEM) })
-            QuickItem("icon/ic_recover.svg", "重启到Recover", modifier = Modifier.clickable { ADBUtil.reboot(device,ADBUtil.RebootType.RECOVER) })
-            QuickItem("icon/ic_fastboot.svg", "重启到Fastboot", modifier = Modifier.clickable { ADBUtil.reboot(device,ADBUtil.RebootType.FASTBOOT) })
+            QuickItem("icon/ic_reboot.svg", "重启手机", modifier = Modifier.clickable { ADBUtil.reboot(device.device,ADBUtil.RebootType.SYSTEM) })
+            QuickItem("icon/ic_recover.svg", "重启到Recover", modifier = Modifier.clickable { ADBUtil.reboot(device.device,ADBUtil.RebootType.RECOVER) })
+            QuickItem("icon/ic_fastboot.svg", "重启到Fastboot", modifier = Modifier.clickable { ADBUtil.reboot(device.device,ADBUtil.RebootType.FASTBOOT) })
         }
     }
 }
@@ -98,21 +99,21 @@ private fun AboutSystem(device: String) {
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AboutKeyBoard(deviceId: String) {
+private fun AboutKeyBoard(device: DeviceInfo) {
     BaseQuick("按键相关", color = Color(158, 176, 184)) {
         FlowRow() {
-            QuickItem("icon/ic_home.svg", "Home键", modifier = Modifier.clickable { ADBUtil.inputKey(deviceId,"3") })
-            QuickItem("icon/ic_back.svg", "Back键", modifier = Modifier.clickable { ADBUtil.inputKey(deviceId,"4") })
-            QuickItem("icon/ic_menu.svg", "Menu键", modifier = Modifier.clickable { ADBUtil.inputKey(deviceId,"82") })
-            QuickItem("icon/ic_power.svg", "Power键", modifier = Modifier.clickable { ADBUtil.inputKey(deviceId,"26") })
-            QuickItem("icon/ic_volume_add.svg", "增加音量", modifier = Modifier.clickable { ADBUtil.inputKey(deviceId,"24") })
-            QuickItem("icon/ic_volume_sub.svg", "降低音量", modifier = Modifier.clickable { ADBUtil.inputKey(deviceId,"25") })
-            QuickItem("icon/ic_volume_close.svg", "静音", modifier = Modifier.clickable { ADBUtil.inputKey(deviceId,"164") })
-            QuickItem("icon/ic_switch.svg", "切换应用", modifier = Modifier.clickable { ADBUtil.inputKey(deviceId,"187") })
-            QuickItem("icon/ic_top.svg", "向上滑动", modifier = Modifier.clickable { ADBUtil.inputSwipe(deviceId,"300","800","300","200") })
-            QuickItem("icon/ic_down.svg", "向下滑动", modifier = Modifier.clickable { ADBUtil.inputSwipe(deviceId,"300","200","300","800") })
-            QuickItem("icon/ic_left.svg", "向左滑动", modifier = Modifier.clickable { ADBUtil.inputSwipe(deviceId,"800","300","200","300") })
-            QuickItem("icon/ic_right.svg", "向右滑动", modifier = Modifier.clickable { ADBUtil.inputSwipe(deviceId,"200","300","800","300") })
+            QuickItem("icon/ic_home.svg", "Home键", modifier = Modifier.clickable { ADBUtil.inputKey(device.device,"3") })
+            QuickItem("icon/ic_back.svg", "Back键", modifier = Modifier.clickable { ADBUtil.inputKey(device.device,"4") })
+            QuickItem("icon/ic_menu.svg", "Menu键", modifier = Modifier.clickable { ADBUtil.inputKey(device.device,"82") })
+            QuickItem("icon/ic_power.svg", "Power键", modifier = Modifier.clickable { ADBUtil.inputKey(device.device,"26") })
+            QuickItem("icon/ic_volume_add.svg", "增加音量", modifier = Modifier.clickable { ADBUtil.inputKey(device.device,"24") })
+            QuickItem("icon/ic_volume_sub.svg", "降低音量", modifier = Modifier.clickable { ADBUtil.inputKey(device.device,"25") })
+            QuickItem("icon/ic_volume_close.svg", "静音", modifier = Modifier.clickable { ADBUtil.inputKey(device.device,"164") })
+            QuickItem("icon/ic_switch.svg", "切换应用", modifier = Modifier.clickable { ADBUtil.inputKey(device.device,"187") })
+            QuickItem("icon/ic_top.svg", "向上滑动", modifier = Modifier.clickable { ADBUtil.inputSwipe(device.device,"300","800","300","200") })
+            QuickItem("icon/ic_down.svg", "向下滑动", modifier = Modifier.clickable { ADBUtil.inputSwipe(device.device,"300","200","300","800") })
+            QuickItem("icon/ic_left.svg", "向左滑动", modifier = Modifier.clickable { ADBUtil.inputSwipe(device.device,"800","300","200","300") })
+            QuickItem("icon/ic_right.svg", "向右滑动", modifier = Modifier.clickable { ADBUtil.inputSwipe(device.device,"200","300","800","300") })
         }
     }
 }

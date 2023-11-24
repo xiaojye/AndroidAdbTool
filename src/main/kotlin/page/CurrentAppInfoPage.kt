@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.unit.dp
+import bean.DeviceInfo
 import dialog.MessageDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,7 +19,7 @@ import tool.ADBUtil
 import java.awt.FileDialog
 
 @Composable
-fun CurrentAppInfoPage(deviceId: String) {
+fun CurrentAppInfoPage(device: DeviceInfo) {
     val scrollState = rememberScrollState()
     var refreshCount by remember { mutableStateOf(0) }
     var showUnInstallDialog by remember { mutableStateOf(false) }
@@ -28,11 +29,11 @@ fun CurrentAppInfoPage(deviceId: String) {
     var currentPackageName by remember { mutableStateOf("") }
     var currentApkPath by remember { mutableStateOf("") }
 
-    LaunchedEffect(refreshCount, deviceId) {
+    LaunchedEffect(refreshCount, device.device) {
         withContext(Dispatchers.IO) {
-            val mCurrentActivity = ADBUtil.getCurrentActivity(deviceId)
+            val mCurrentActivity = ADBUtil.getCurrentActivity(device.device)
             val mCurrentPackageName = mCurrentActivity.split("/").getOrNull(0) ?: ""
-            val mCurrentApkPath = ADBUtil.getApkPath(deviceId, mCurrentPackageName) ?: ""
+            val mCurrentApkPath = ADBUtil.getApkPath(device.device, mCurrentPackageName) ?: ""
             withContext(Dispatchers.Default) {
                 currentActivity = mCurrentActivity
                 currentPackageName = mCurrentPackageName
@@ -63,7 +64,7 @@ fun CurrentAppInfoPage(deviceId: String) {
         }
         Row {
             Button(onClick = {
-                ADBUtil.stopApplication(deviceId, currentPackageName)
+                ADBUtil.stopApplication(device.device, currentPackageName)
             }, modifier = Modifier.padding(10.dp)) {
                 Text("停止运行")
             }
@@ -91,7 +92,7 @@ fun CurrentAppInfoPage(deviceId: String) {
                 if (directory != null) {
                     val path = "$directory$file"
                     println(path)
-                    ADBUtil.pull(deviceId, currentApkPath, path)
+                    ADBUtil.pull(device.device, currentApkPath, path)
                 }
             }, modifier = Modifier.padding(10.dp)) {
                 Text("导出安装包")
@@ -109,7 +110,7 @@ fun CurrentAppInfoPage(deviceId: String) {
             showUnInstallDialog = false
         }, {
             showUnInstallDialog = false
-            ADBUtil.unInstall(deviceId, currentPackageName)
+            ADBUtil.unInstall(device.device, currentPackageName)
             refreshCount++
         })
     }
@@ -118,7 +119,7 @@ fun CurrentAppInfoPage(deviceId: String) {
             showCleanDataDialog = false
         }, {
             showCleanDataDialog = false
-            ADBUtil.cleanAppData(deviceId, currentPackageName)
+            ADBUtil.cleanAppData(device.device, currentPackageName)
             refreshCount++
         })
     }

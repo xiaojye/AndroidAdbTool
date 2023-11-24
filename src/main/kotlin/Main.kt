@@ -67,29 +67,31 @@ fun App() {
     }
 
     var selectItem by remember { mutableStateOf(0) }
-    var device by remember { mutableStateOf("") }
+    var device by remember { mutableStateOf<DeviceInfo?>(null) }
 
     Scaffold(bottomBar = {
         MainNav(modifier = Modifier.width(200.dp),refreshConnectedDevicesList,connectedDevicesList, { selectItem = it }) {
-            if (!it.isNullOrEmpty()) {
+            if (it != null) {
                 device = it
             }
         }
     }) {
         Box(modifier = Modifier.background(defaultBgColor).fillMaxHeight().fillMaxWidth().padding(start = 200.dp)) {
-            when (selectItem) {
-                0 -> CurrentAppInfoPage(device)
-                1 -> PhoneInfoPage(device,refreshConnectedDevicesList)
-                2 -> QuickPage(device)
-                3 -> FileManager(device, ADBUtil.hasRoot(device))
-                4 -> DeviceRecordPage(refreshConnectedDevicesList,connectedDevicesList)
+            if(device != null){
+                when (selectItem) {
+                    0 -> CurrentAppInfoPage(device!!)
+                    1 -> PhoneInfoPage(device!!,refreshConnectedDevicesList)
+                    2 -> QuickPage(device!!)
+                    3 -> FileManager(device!!, ADBUtil.hasRoot(device!!.device))
+                    4 -> DeviceRecordPage(refreshConnectedDevicesList,connectedDevicesList)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun MainNav(modifier: Modifier,refreshConnectedDevicesList:()->Unit,connectedDevicesList:MutableList<DeviceInfo>, onSelectItem: (Int) -> Unit, deviceId: (String?) -> Unit) {
+private fun MainNav(modifier: Modifier,refreshConnectedDevicesList:()->Unit,connectedDevicesList:MutableList<DeviceInfo>, onSelectItem: (Int) -> Unit, deviceId: (DeviceInfo?) -> Unit) {
     var navigationIndex by remember { mutableStateOf(0) }
     NavigationRail(modifier, elevation = 0.dp, header = {
         Spacer(modifier = Modifier.height(12.dp))
@@ -134,7 +136,7 @@ private fun MainNavItem(selectedPosition: Int, mePosition: Int, svgPath: String,
  * 连接设备widget
  */
 @Composable
-fun ConnectDevices(refreshConnectedDevicesList:()->Unit,connectedDevicesList:MutableList<DeviceInfo>,deviceCallback: (String?) -> Unit) {
+fun ConnectDevices(refreshConnectedDevicesList:()->Unit,connectedDevicesList:MutableList<DeviceInfo>,deviceCallback: (DeviceInfo?) -> Unit) {
     // 拿到已经连接的所有设备
     var refresh by remember { mutableStateOf(0) }
     LaunchedEffect(refresh) {
@@ -152,7 +154,7 @@ fun ConnectDevices(refreshConnectedDevicesList:()->Unit,connectedDevicesList:Mut
         val deviceName = if (connectedDevicesList.isNotEmpty()) {
             val firstDevice = connectedDevicesList[selectIndexDevice]
             // 获取设备品牌
-            deviceCallback.invoke(firstDevice.device)
+            deviceCallback.invoke(firstDevice)
             "${firstDevice.deviceName}\n${firstDevice.deviceModel}"
         } else {
             deviceCallback.invoke(null)
@@ -181,7 +183,7 @@ fun ConnectDevices(refreshConnectedDevicesList:()->Unit,connectedDevicesList:Mut
                         modifier = Modifier.fillMaxWidth().clickable {
                             selectIndexDevice = it
                             showDeviceItem = false
-                            deviceCallback.invoke(device.device)
+                            deviceCallback.invoke(device)
                         }.padding(vertical = 6.dp, horizontal = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween

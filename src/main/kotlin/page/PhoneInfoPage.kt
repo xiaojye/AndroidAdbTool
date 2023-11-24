@@ -11,26 +11,27 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import bean.DeviceInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import tool.ADBUtil
 
 
 @Composable
-fun PhoneInfoPage(deviceId: String,refreshConnectedDevicesList:()->Unit) {
+fun PhoneInfoPage(device: DeviceInfo,refreshConnectedDevicesList:()->Unit) {
     var map by remember { mutableStateOf<Map<String,String>>(mapOf()) }
     var refreshCount by remember { mutableStateOf(0) }
     val scrollState = rememberScrollState()
 
-    LaunchedEffect(deviceId,refreshCount,map){
+    LaunchedEffect(device.device,refreshCount,map){
         withContext(Dispatchers.IO) {
-            val newMap = ADBUtil.getProp(deviceId)
-            newMap["androidId"] = ADBUtil.getAndroidId(deviceId)
-            newMap["density"] = ADBUtil.getDensity(deviceId)
-            newMap["physicalSize"] = ADBUtil.getPhysicalSize(deviceId)
-            newMap["mac"] = ADBUtil.getMac(deviceId)
-            newMap["ipv4"] = ADBUtil.getWlan0IP(deviceId, true) ?: ""
-            val batteryInfo = ADBUtil.getBatteryInfo(deviceId)
+            val newMap = ADBUtil.getProp(device.device)
+            newMap["androidId"] = ADBUtil.getAndroidId(device.device)
+            newMap["density"] = ADBUtil.getDensity(device.device)
+            newMap["physicalSize"] = ADBUtil.getPhysicalSize(device.device)
+            newMap["mac"] = ADBUtil.getMac(device.device)
+            newMap["ipv4"] = ADBUtil.getWlan0IP(device.device, true) ?: ""
+            val batteryInfo = ADBUtil.getBatteryInfo(device.device)
             newMap["batteryInfo-statusStr"] = batteryInfo.getStatusStr()
             newMap["batteryInfo-healthStr"] = batteryInfo.getHealthStr()
             newMap["batteryInfo-chargingMethod"] = batteryInfo.getChargingMethod()
@@ -85,7 +86,7 @@ fun PhoneInfoPage(deviceId: String,refreshConnectedDevicesList:()->Unit) {
         Spacer(modifier = Modifier.height(10.dp))
         Row {
             Button(onClick = {
-                ADBUtil.disconnectDevice(deviceId)
+                ADBUtil.disconnectDevice(device.device)
                 refreshConnectedDevicesList()
             }, modifier = Modifier.padding(10.dp)) {
                 Text("断开连接")

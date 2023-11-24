@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import bean.DeviceInfo
 import bean.FileBean
 import dialog.InputDialog
 import dialog.MessageDialog
@@ -31,7 +32,7 @@ import java.io.File
 private const val ROOT = "/"
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun FileManager(deviceId: String,root:Boolean = false) {
+fun FileManager(device: DeviceInfo,root:Boolean = false) {
     var showDeleteDialog by remember { mutableStateOf<FileBean?>(null) }
     var showRenameDialog by remember { mutableStateOf<FileBean?>(null) }
     var foldName by remember { mutableStateOf(ROOT) }
@@ -39,9 +40,9 @@ fun FileManager(deviceId: String,root:Boolean = false) {
     val fileList = remember { mutableStateListOf<FileBean>() }
 
     // 获取本机文件及文件夹
-    LaunchedEffect(foldName,deviceId,refresh) {
+    LaunchedEffect(foldName,device.device,refresh) {
         withContext(Dispatchers.IO) {
-            val list = ADBUtil.fileList(deviceId,foldName,root)
+            val list = ADBUtil.fileList(device.device,foldName,root)
             list.sortBy { !it.fold }
             withContext(Dispatchers.Default) {
                 fileList.clear()
@@ -69,7 +70,7 @@ fun FileManager(deviceId: String,root:Boolean = false) {
                 Text(foldName, fontSize = 16.sp, modifier = Modifier.padding(vertical = 6.dp))
                 Spacer(modifier = Modifier.weight(1F))
                 Icon(painterResource("ic_upload.svg"), contentDescription = "上传", modifier = Modifier.size(18.dp).clickable {
-                    pushFile(deviceId,foldName,root)
+                    pushFile(device.device,foldName,root)
                     refresh++
                 })
                 Spacer(modifier = Modifier.width(8.dp))
@@ -85,13 +86,13 @@ fun FileManager(deviceId: String,root:Boolean = false) {
                     val list = arrayListOf<ContextMenuItem>()
                     if(item.fold){
                         list.add(ContextMenuItem("上传到此处") {
-                            pushFile(deviceId,item.name,root)
+                            pushFile(device.device,item.name,root)
                             refresh++
                         })
                     }else{
-                        list.add(ContextMenuItem("默认方式打开") { pullFileToCache(deviceId,item,true,root) })
+                        list.add(ContextMenuItem("默认方式打开") { pullFileToCache(device.device,item,true,root) })
                     }
-                    list.add(ContextMenuItem("导出到电脑") { pullFile(deviceId,item,false,root) })
+                    list.add(ContextMenuItem("导出到电脑") { pullFile(device.device,item,false,root) })
                     list.add(ContextMenuItem("重命名") {
                         showRenameDialog = item
                     })
@@ -112,7 +113,7 @@ fun FileManager(deviceId: String,root:Boolean = false) {
                             fileList.clear()
                             foldName = "$foldName${item.name}/"
                         } else {
-                            pullFileToCache(deviceId,item,true,root)
+                            pullFileToCache(device.device,item,true,root)
                         }
                     })
                         .fillMaxWidth()
@@ -138,7 +139,7 @@ fun FileManager(deviceId: String,root:Boolean = false) {
         MessageDialog("注意", "确定要删除${file}吗？", {
             showDeleteDialog = null
         }, {
-            ADBUtil.deleteFile(deviceId,file,root)
+            ADBUtil.deleteFile(device.device,file,root)
             fileList.remove(showDeleteDialog)
             showDeleteDialog = null
         })
@@ -154,7 +155,7 @@ fun FileManager(deviceId: String,root:Boolean = false) {
             }
             val newFile = "${showRenameDialog?.parent}${it}"
             println("${file}重命名为${newFile}")
-            ADBUtil.moveFile(deviceId,file,newFile,root)
+            ADBUtil.moveFile(device.device,file,newFile,root)
             showRenameDialog = null
             refresh++
         })
