@@ -18,7 +18,7 @@ import tool.ADBUtil
 
 
 @Composable
-fun PhoneInfoPage(device: DeviceInfo,refreshConnectedDevicesList:()->Unit) {
+fun PhoneInfoPage(device: DeviceInfo) {
     var map by remember { mutableStateOf<Map<String,String>>(mapOf()) }
     var refreshCount by remember { mutableStateOf(0) }
     val scrollState = rememberScrollState()
@@ -81,15 +81,6 @@ fun PhoneInfoPage(device: DeviceInfo,refreshConnectedDevicesList:()->Unit) {
                 Text("电池健康："+map["batteryInfo-healthStr"])
                 Text("充电计数："+map["batteryInfo-counter"])
                 Text("电池技术："+map["batteryInfo-technology"])
-            }
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-        Row {
-            Button(onClick = {
-                ADBUtil.disconnectDevice(device.device)
-                refreshConnectedDevicesList()
-            }, modifier = Modifier.padding(10.dp)) {
-                Text("断开连接")
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
