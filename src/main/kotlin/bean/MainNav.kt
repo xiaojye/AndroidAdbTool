@@ -6,6 +6,7 @@ abstract class MainNav(val svgName: String, val labelText: String,needDevice:Boo
             CurrentAppInfo(),
             PhoneInfo(),
             QuickFun(),
+            Install(),
             FileManage(),
             DeviceRecord(),
         )
@@ -16,3 +17,4 @@ class PhoneInfo:MainNav("ic_phone.svg","手机信息",true){}
 class QuickFun:MainNav("ic_quick_future.svg","快捷功能",true){}
 class FileManage:MainNav("ic_folder.svg","文件管理",true){}
 class DeviceRecord:MainNav("ic_phone_record.svg","设备历史",false){}
+class Install:MainNav("ic_install.svg","安装应用",false){}

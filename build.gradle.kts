@@ -19,12 +19,13 @@ repositories {
 
 // https://jetpackcompose.cn/docs/resources
 dependencies {
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(compose.desktop.currentOs)
     implementation("com.alibaba:fastjson:2.0.28")
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "17"
 }
 
 // https://github.com/JetBrains/compose-multiplatform/tree/master/tutorials/Native_distributions_and_local_execution
