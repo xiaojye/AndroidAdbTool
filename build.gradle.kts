@@ -20,6 +20,7 @@ repositories {
 // https://jetpackcompose.cn/docs/resources
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+    // implementation(files("libs/bundletool-all-1.15.6.jar"))
     implementation(compose.desktop.currentOs)
     implementation("com.alibaba:fastjson:2.0.28")
 }
