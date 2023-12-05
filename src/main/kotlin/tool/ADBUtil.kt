@@ -346,6 +346,24 @@ object ADBUtil {
         }
     }
 
+    fun installXapk(deviceId:String,dirPath:String,obbDir:String) {
+        val command = arrayListOf("-s",deviceId,"install-multiple")
+        File(dirPath).listFiles()?.forEach {
+            if (it.name.endsWith(".apk",true)){
+                command.add(it.absolutePath)
+            }
+        }
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command.toTypedArray()))
+        if(result.contains("success",true)){
+            val obb = File(obbDir)
+            if (obb.exists()) {
+                obb.listFiles()?.forEach {
+                    push(deviceId,it.absolutePath,"/sdcard/Android/obb/",false)
+                }
+            }
+        }
+    }
+
     /**
      * 安装用于目标版本小于6.0的应用
      */

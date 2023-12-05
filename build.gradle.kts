@@ -40,16 +40,16 @@ compose.desktop {
             description = "AndroidAdbTool"
             vendor = "Erning"
             macOS {
-                iconFile.set(project.file("logo_mac.icns"))
+                iconFile.set(project.file("src/main/resources/logo/logo_mac.icns"))
             }
             windows {
                 upgradeUuid = "2D79971E-C867-95ED-0859-B109F3EC97CC"
                 console = true
                 shortcut = true
-                iconFile.set(project.file("logo_windows.ico"))
+                iconFile.set(project.file("src/main/resources/logo/logo_windows.ico"))
             }
             linux {
-                iconFile.set(project.file("logo_linux.png"))
+                iconFile.set(project.file("src/main/resources/logo/logo_linux.png"))
             }
         }
     }

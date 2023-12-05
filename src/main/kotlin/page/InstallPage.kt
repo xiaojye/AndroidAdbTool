@@ -1,5 +1,6 @@
 package page
 
+import UZipFile
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Text
@@ -12,7 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import bean.DeviceInfo
-import dialog.MessageDialog
 import tool.ADBUtil
 import tool.BundleUtil
 import tool.FileUtil
@@ -200,6 +200,6 @@ private fun installApp(device:DeviceInfo,file: File?,jksPath:String?,jksPass:Str
         }
         path.mkdirs()
         UZipFile.unZipFiles(file, path.absolutePath)
-        // TODO
+        ADBUtil.installXapk(device.device,path.absolutePath,File(path, "Android/obb/").absolutePath)
     }
 }
