@@ -52,9 +52,6 @@ private fun CommonFunction(device: DeviceInfo) {
 
     BaseQuick("常用功能", color = Color(255, 152, 0)) {
         FlowRow() {
-            QuickItem("icon/ic_install.svg", "安装应用（外部）", modifier = Modifier.clickable {
-                CLUtil.execute(arrayOf("java","-jar","/Users/erning/Program/Java/ApkInstaller_jar/ApkInstaller.jar"))
-            })
             QuickItem("icon/ic_input.svg", "输入文本", modifier = Modifier.clickable {
                 showInputTextDialog = true
             })
