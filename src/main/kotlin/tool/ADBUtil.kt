@@ -436,13 +436,8 @@ object ADBUtil {
      * 获取ADB路径
      */
     private fun getAdbPath(): String {
-        val isWindows = PlatformUtil.isWindows()
-        val adbDir = if (isWindows){
-            File(FileUtil.getUserHomeFile(),"AppData${File.separator}Local${File.separator}AndroidAdbTool${File.separator}runtimeAdbFiles")
-        }else{
-            File(FileUtil.getSelfPath(),"runtimeAdbFiles")
-        }
-        val adbFile = if (isWindows) {
+        val adbDir = File(FileUtil.getUserHomeFile(),".AndroidAdbTool${File.separator}runtimeAdbFiles")
+        val adbFile = if (PlatformUtil.isWindows()) {
             File(adbDir,"adb.exe")
         } else {
             File(adbDir,"adb")

@@ -69,6 +69,7 @@ fun App() {
                     is QuickFun -> QuickPage(device!!)
                     is FileManage -> FileManager(device!!, ADBUtil.hasRoot(device!!.device))
                     is Install -> InstallPage(device!!)
+                    is About -> AboutPage()
                 }
             }
             when (selectMainNav) {

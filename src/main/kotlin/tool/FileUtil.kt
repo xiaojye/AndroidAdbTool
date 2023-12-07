@@ -40,12 +40,7 @@ object FileUtil {
     }
 
     fun releaseAdb(){
-        val isWindows = PlatformUtil.isWindows()
-        val adbDir = if (isWindows){
-            File(getUserHomeFile(),"AppData${File.separator}Local${File.separator}AndroidAdbTool${File.separator}runtimeAdbFiles")
-        }else{
-            File(getSelfPath(),"runtimeAdbFiles")
-        }
+        val adbDir = File(getUserHomeFile(),".AndroidAdbTool${File.separator}runtimeAdbFiles")
         if(adbDir.isFile){
             adbDir.delete()
         }
@@ -53,12 +48,14 @@ object FileUtil {
             adbDir.mkdirs()
             adbDir.setWritable(true,false)
         }
-        if (isWindows){
-            releaseFile(adbDir,"adb.exe","bin"+File.separator+"adb.exe")
-            releaseFile(adbDir,"AdbWinApi.dll","bin"+File.separator+"AdbWinApi.dll")
-            releaseFile(adbDir,"AdbWinUsbApi.dll","bin"+File.separator+"AdbWinUsbApi.dll")
+        if (PlatformUtil.isWindows()){
+            releaseFile(adbDir,"adb.exe","bin"+File.separator+"windows"+File.separator+"adb.exe")
+            releaseFile(adbDir,"AdbWinApi.dll","bin"+File.separator+"windows"+File.separator+"AdbWinApi.dll")
+            releaseFile(adbDir,"AdbWinUsbApi.dll","bin"+File.separator+File.separator+"windows"+"AdbWinUsbApi.dll")
+        }else if(PlatformUtil.isMac()){
+            releaseFile(adbDir,"adb","bin"+File.separator+"mac"+File.separator+"adb")
         }else{
-            releaseFile(adbDir,"adb","bin"+File.separator+"adb")
+            releaseFile(adbDir,"adb","bin"+File.separator+"linux"+File.separator+"adb")
         }
     }
 
@@ -76,11 +73,7 @@ object FileUtil {
     }
 
     fun getCacheDir(): File {
-        val cacheDir = if(PlatformUtil.isWindows()){
-            File(getUserHomeFile(),"AppData${File.separator}Local${File.separator}AndroidAdbTool${File.separator}runtimeCache")
-        }else{
-            File(getSelfPath(),"runtimeCache")
-        }
+        val cacheDir = File(getUserHomeFile(),".AndroidAdbTool${File.separator}runtimeCache")
         if(cacheDir.isFile){
             cacheDir.delete()
         }
@@ -117,26 +110,8 @@ object FileUtil {
         }catch (ignore:Exception){ }
     }
 
-    fun getDesktopFile(): File {
-        return File(getUserHomeFile(),"Desktop")
-    }
-
-    fun getUserHomeFile(): File? {
-        val home = FileSystemView.getFileSystemView().homeDirectory
-        return if(PlatformUtil.isWindows() && home.name.equals("Desktop",true)){
-            File(home.absolutePath.removeSuffix(File.separator+"Desktop"))
-        }else{
-            home
-        }
-    }
-
     fun getConfigFile(fileName:String): File {
-        val isWindows = PlatformUtil.isWindows()
-        val dir = if (isWindows){
-            File(getUserHomeFile(),"AppData${File.separator}Local${File.separator}AndroidAdbTool${File.separator}")
-        }else{
-            File(getSelfPath())
-        }
+        val dir = File(getUserHomeFile(),".AndroidAdbTool${File.separator}config")
         if(dir.isFile){
             dir.delete()
         }
@@ -150,5 +125,17 @@ object FileUtil {
         }
         configFile.createNewFile()
         return configFile
+    }
+
+    fun getDesktopFile(): File {
+        return File(getUserHomeFile(),"Desktop")
+    }
+    fun getUserHomeFile(): File? {
+        val home = FileSystemView.getFileSystemView().homeDirectory
+        return if(PlatformUtil.isWindows() && home.name.equals("Desktop",true)){
+            File(home.absolutePath.removeSuffix(File.separator+"Desktop"))
+        }else{
+            home
+        }
     }
 }
