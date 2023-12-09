@@ -22,13 +22,14 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     // implementation(files("libs/bundletool-all-1.15.6.jar"))
     implementation(compose.desktop.currentOs)
-    implementation("com.alibaba:fastjson:2.0.28")
+    implementation("com.alibaba:fastjson:1.2.83")
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.jvmTarget = "11"
 }
 
+// https://github.com/JetBrains/compose-multiplatform/tree/master/tutorials/Native_distributions_and_local_execution#packaging-resources
 // https://github.com/JetBrains/compose-multiplatform/tree/master/tutorials/Native_distributions_and_local_execution
 compose.desktop {
     application {

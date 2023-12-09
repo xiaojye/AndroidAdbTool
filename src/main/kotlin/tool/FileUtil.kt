@@ -1,9 +1,8 @@
 package tool
 
+import androidx.compose.ui.res.useResource
 import java.awt.Desktop
 import java.io.File
-import java.nio.file.Files
-import java.util.*
 import javax.swing.filechooser.FileSystemView
 
 /**
@@ -49,26 +48,30 @@ object FileUtil {
             adbDir.setWritable(true,false)
         }
         if (PlatformUtil.isWindows()){
-            releaseFile(adbDir,"adb.exe","bin"+File.separator+"windows"+File.separator+"adb.exe")
-            releaseFile(adbDir,"AdbWinApi.dll","bin"+File.separator+"windows"+File.separator+"AdbWinApi.dll")
-            releaseFile(adbDir,"AdbWinUsbApi.dll","bin"+File.separator+File.separator+"windows"+"AdbWinUsbApi.dll")
+            releaseFile(adbDir,"adb.exe","bin/windows/adb.exe")
+            releaseFile(adbDir,"AdbWinApi.dll","bin/windows/AdbWinApi.dll")
+            releaseFile(adbDir,"AdbWinUsbApi.dll","bin/windows/AdbWinUsbApi.dll")
         }else if(PlatformUtil.isMac()){
-            releaseFile(adbDir,"adb","bin"+File.separator+"mac"+File.separator+"adb")
+            releaseFile(adbDir,"adb","bin/mac/adb")
         }else{
-            releaseFile(adbDir,"adb","bin"+File.separator+"linux"+File.separator+"adb")
+            releaseFile(adbDir,"adb","bin/linux/adb")
         }
     }
 
     private fun releaseFile(dir:File,fileName:String,packageFile:String){
-        println("释放文件：${packageFile}到${dir}${File.separator}${fileName}")
-        val file = File(dir,fileName)
-        if (!file.exists()){
-            ClassLoader.getSystemResourceAsStream(packageFile)?.use {
-                file.createNewFile()
-                file.setWritable(true,false)
-                file.writeBytes(it.readAllBytes())
+        try {
+            println("释放文件：${packageFile}到${dir}${File.separator}${fileName}")
+            val file = File(dir,fileName)
+            if (!file.exists()){
+                useResource(packageFile){
+                    file.createNewFile()
+                    file.setWritable(true,false)
+                    file.writeBytes(it.readAllBytes())
+                }
+                file.setExecutable(true,false)
             }
-            file.setExecutable(true,false)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
