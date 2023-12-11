@@ -13,8 +13,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import tool.ADBUtil
+import tool.FileUtil
 import tool.PlatformUtil
 import java.awt.Desktop
+import java.io.File
 import java.net.URI
 
 /**
@@ -25,6 +28,10 @@ import java.net.URI
 fun AboutPage(){
     Column(modifier = Modifier.padding(10.dp).fillMaxWidth().background(Color.White).padding(10.dp).verticalScroll(rememberScrollState())) {
         Row {
+            Text(text = "ADB路径：")
+            Text(modifier = Modifier.clickable { FileUtil.openFileInExplorer(File(ADBUtil.ADB_PATH)) },text = ADBUtil.ADB_PATH, color = Color.Blue)
+        }
+        Row(modifier = Modifier.padding(top=10.dp)) {
             Text(text = "下载ADB（中国官方）：")
             Text(modifier = Modifier.clickable { PlatformUtil.openBrowser("https://googledownloads.cn/android/repository/platform-tools-latest-windows.zip") }, text = "Windows版本", color = Color.Blue)
             Text(text = "、")
