@@ -29,7 +29,7 @@ fun main() = application {
             FileUtil.cleanCache()
             exitApplication()
         },
-        title = "AndroidAdbTool(${this::class.java.`package`.implementationVersion})",
+        title = "AndroidAdbTool(${System.getProperty("jpackage.app-version")})",
         visible = true,
         state = WindowState(
             size = DpSize(width = 1200.dp, height = 900.dp),

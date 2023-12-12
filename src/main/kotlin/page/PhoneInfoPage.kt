@@ -15,6 +15,7 @@ import bean.DeviceInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import tool.ADBUtil
+import tool.formatSize
 
 
 @Composable
@@ -41,6 +42,12 @@ fun PhoneInfoPage(device: DeviceInfo) {
             newMap["batteryInfo-temperature"] = batteryInfo.temperature.toString()
             newMap["batteryInfo-technology"] = batteryInfo.technology ?: ""
             newMap["batteryInfo-counter"] = batteryInfo.counter.toString()
+            val memoryInfo = ADBUtil.getMemoryInfo(device.device)
+            newMap["memoryInfo-memTotal"] = memoryInfo.memTotal.formatSize(1024F)
+            newMap["memoryInfo-memFree"] = memoryInfo.memFree.formatSize(1024F)
+            newMap["memoryInfo-memAvailable"] = memoryInfo.memAvailable.formatSize(1024F)
+            newMap["memoryInfo-swapTotal"] = memoryInfo.swapTotal.formatSize(1024F)
+            newMap["memoryInfo-swapFree"] = memoryInfo.swapFree.formatSize(1024F)
             withContext(Dispatchers.Default){
                 map = newMap
             }
@@ -52,6 +59,7 @@ fun PhoneInfoPage(device: DeviceInfo) {
                 Text("生产商："+map["ro.product.manufacturer"])
                 Text("品牌："+map["ro.product.brand"])
                 Text("型号："+map["ro.product.model"])
+                Text("设备名称："+map.getOrDefault("persist.sys.device_name",""))
                 Spacer(modifier = Modifier.height(10.dp))
                 Text("Android版本："+map["ro.build.version.release"])
                 Text("AndroidId："+map["androidId"])
@@ -71,6 +79,13 @@ fun PhoneInfoPage(device: DeviceInfo) {
                 Text("国家代码："+map["gsm.operator.iso-country"])
                 Spacer(modifier = Modifier.height(10.dp))
                 Text("Abi列表："+map["ro.product.cpu.abilist"])
+                Spacer(modifier = Modifier.height(10.dp))
+                Text("总内存："+map.getOrDefault("memoryInfo-memTotal",""))
+                Text("可用内存："+map.getOrDefault("memoryInfo-memFree",""))
+                Text("可用内存："+map.getOrDefault("memoryInfo-memAvailable",""))
+                Text("可用交换空间："+map.getOrDefault("memoryInfo-swapFree","")+"/"+map.getOrDefault("memoryInfo-swapTotal",""))
+                Text("应用内存限制："+map.getOrDefault("dalvik.vm.heapsize",""))
+                Text("OOM限制："+map.getOrDefault("dalvik.vm.heapgrowthlimit",""))
                 Spacer(modifier = Modifier.height(10.dp))
                 Text("电池存在："+map["batteryInfo-present"])
                 Text("电池状态："+map["batteryInfo-statusStr"])

@@ -4,9 +4,6 @@ import UnicodeCharConvert
 import bean.DeviceInfo
 import bean.FileBean
 import java.io.File
-import java.net.URLEncoder
-import java.util.*
-import javax.swing.filechooser.FileSystemView
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -149,6 +146,24 @@ object ADBUtil {
     fun getAndroidId(deviceId: String): String {
         val command = arrayOf("-s", deviceId, "shell","settings","get","secure","android_id")
         return CLUtil.execute(arrayOf(ADB_PATH, *command)).trim()
+    }
+
+    fun getMemoryInfo(deviceId: String):MemoryInfo{
+        val command = arrayOf("-s", deviceId, "shell","cat","/proc/meminfo")
+        val result = CLUtil.execute(arrayOf(ADB_PATH, *command))
+        val data = parseResult(result)
+        return MemoryInfo().apply {
+            memTotal = getLineWithStart("MemTotal",data,true,false)?.getOrNull(1)
+            memFree = getLineWithStart("MemFree",data,true,false)?.getOrNull(1)
+            memAvailable = getLineWithStart("MemAvailable",data,true,false)?.getOrNull(1)
+            buffers = getLineWithStart("Buffers",data,true,false)?.getOrNull(1)
+            cached = getLineWithStart("Cached",data,true,false)?.getOrNull(1)
+            swapCached = getLineWithStart("SwapCached",data,true,false)?.getOrNull(1)
+            active = getLineWithStart("Active",data,true,false)?.getOrNull(1)
+            inactive = getLineWithStart("Inactive",data,true,false)?.getOrNull(1)
+            swapTotal = getLineWithStart("SwapTotal",data,true,false)?.getOrNull(1)
+            swapFree = getLineWithStart("SwapFree",data,true,false)?.getOrNull(1)
+        }
     }
     // endregion
 
@@ -544,5 +559,18 @@ object ADBUtil {
                 else -> "未知"
             }
         }
+    }
+
+    class MemoryInfo(){
+        var memTotal: String? = null // 所有可用RAM大小（即物理内存减去一些预留位和内核的二进制代码大小）（HighTotal + LowTotal）,系统从加电开始到引导完成，BIOS等要保留一些内存，内核要保留一些内存，最后剩下可供系统支配的内存就是MemTotal。这个值在系统运行期间一般是固定不变的
+        var memFree: String? = null // LowFree与HighFree的总和，被系统留着未使用的内存,MemFree是说的系统层面
+        var memAvailable: String? = null // 应用程序可用内存数。系统中有些内存虽然已被使用但是可以回收的，比如cache/buffer、slab都有一部分可以回收，所以MemFree不能代表全部可用的内存，这部分可回收的内存加上MemFree才是系统可用的内存，即：MemAvailable≈MemFree+Buffers+Cached，它是内核使用特定的算法计算出来的，是一个估计,MemAvailable是说的应用程序层面
+        var buffers: String? = null // 用来给文件做缓冲大小
+        var cached: String? = null // 用于从磁盘读取的文件在内存中的缓存。不包括 SwapCached
+        var swapCached: String? = null // 被swap到磁盘上的内存，如果已经被swap回来，但是仍在swapfile中也保留了一份。（在内存压力大的时候这样可以节省I/O，因为很可能这些内存马上又要被换出去）
+        var active: String? = null // 更近和更频繁使用的内存，如果非必要不会被使用。
+        var inactive: String? = null // 更没有被频繁使用的内存，更有可能被用于其他用途。
+        var swapTotal: String? = null // 总的可用SWAP空间。
+        var swapFree: String? = null // 未使用的SWAP空间。
     }
 }
