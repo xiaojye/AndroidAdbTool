@@ -24,7 +24,7 @@ fun PhoneInfoPage(device: DeviceInfo) {
     var refreshCount by remember { mutableStateOf(0) }
     val scrollState = rememberScrollState()
 
-    LaunchedEffect(device.device,refreshCount,map){
+    LaunchedEffect(device.device,refreshCount){
         withContext(Dispatchers.IO) {
             val newMap = ADBUtil.getProp(device.device)
             newMap["androidId"] = ADBUtil.getAndroidId(device.device)
