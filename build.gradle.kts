@@ -42,6 +42,7 @@ compose.desktop {
             vendor = "Erning"
             macOS {
                 iconFile.set(project.file("src/main/resources/logo/logo_mac.icns"))
+                bundleID = "cn.erning.AndroidAdbTool"
             }
             windows {
                 upgradeUuid = "2D79971E-C867-95ED-0859-B109F3EC97CC"
