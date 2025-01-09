@@ -32,7 +32,7 @@ fun main() = application {
         title = "AndroidAdbTool(${System.getProperty("jpackage.app-version")})",
         visible = true,
         state = WindowState(
-            size = DpSize(width = 1200.dp, height = 900.dp),
+            size = DpSize(width = 800.dp, height = 600.dp),
             position = WindowPosition(Alignment.Center)
         )
     ) {
