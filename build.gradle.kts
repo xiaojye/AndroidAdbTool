@@ -12,6 +12,8 @@ group = "cn.erning"
 version = versionName
 
 repositories {
+    maven("https://maven.aliyun.com/repository/google")
+    maven("https://maven.aliyun.com/repository/public")
     google()
     mavenCentral()
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
@@ -23,6 +25,7 @@ dependencies {
     // implementation(files("libs/bundletool-all-1.15.6.jar"))
     implementation(compose.desktop.currentOs)
     implementation("com.alibaba:fastjson:1.2.83")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.20")
 }
 
 tasks.withType<KotlinCompile> {
